@@ -1,36 +1,19 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const session = require("express-session");
-const passport = require("passport");
-const authRoutes = require("./auth/authRoutes");
-require("./config/passport.setup"); // Include your Passport setup
+const bodyParser = require("body-parser");
+const authRoutes = require("./routes/auth/authRoutes");
+const userRoutes = require("./routes/user/userRoutes");
 
 app.use(
   cors({
     origin: "*",
   })
 );
+app.use(bodyParser.json());
 
-// Session setup
-app.use(
-  session({
-    secret: "your-secret-key",
-    resave: false,
-    saveUninitialized: false,
-  })
-);
+app.use("/", userRoutes);
 
-// Initialize Passport
-app.use(passport.initialize());
-app.use(passport.session());
+app.use("/auth", authRoutes);
 
-// Your routes setup
-app.use("/homepage", (req, res) => {
-  res.status(200).send("good job, all logged in");
-});
-app.use("/", authRoutes);
-
-// ... (other routes and configurations)
 module.exports = app;
-// Start your server
