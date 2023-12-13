@@ -7,10 +7,8 @@ module.exports = {
       SELECT * FROM dogs
       WHERE user_email = $1;
     `;
-
       const values = [userEmail];
       const result = await pool.query(query, values);
-
       return result.rows;
     } catch (error) {
       console.error("Error retrieving dogs for user:", error);
@@ -57,6 +55,7 @@ module.exports = {
       throw error;
     }
   },
+
   create: async function (ownerEmail, data) {
     if (!data.profile_picture || data.profile_picture === "undefined")
       data.profile_picture = "null";
@@ -131,6 +130,51 @@ module.exports = {
       return result.rows[0];
     } catch (error) {
       console.log(error);
+      throw error;
+    }
+  },
+  getMedicines: async function (dogId) {
+    try {
+      const query = "SELECT * FROM medicines WHERE dog_id = $1";
+      const values = [dogId];
+
+      const result = await pool.query(query, values);
+      return result.rows;
+    } catch (error) {
+      console.error("Error retrieving medicines:", error);
+      throw error;
+    }
+  },
+  createMedicines: async function (medicinesData) {
+    try {
+      const values = medicinesData.map((medicineData) => {
+        const { dogId, name, dosage, description } = medicineData;
+        return [dogId, name, dosage, description];
+      });
+
+      const query = `
+        INSERT INTO medicines (dog_id, name, dosage, description)
+        VALUES ${values
+          .map(
+            (_, index) =>
+              `($${index * 4 + 1}, $${index * 4 + 2}, $${index * 4 + 3}, $${
+                index * 4 + 4
+              })`
+          )
+          .join(",")}
+        RETURNING *;
+      `;
+
+      const flatValues = values.flat();
+      const result = await pool.query(query, flatValues);
+
+      if (result.rows.length > 0) {
+        return result.rows;
+      } else {
+        throw new Error("Medicine creation failed");
+      }
+    } catch (error) {
+      console.error("Error creating medicines:", error);
       throw error;
     }
   },

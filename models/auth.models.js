@@ -18,7 +18,7 @@ module.exports = {
         state,
         city,
       } = data;
-      const hashedPassword = await hashPassword(data.password);
+      const hashedPassword = await hashPassword(password);
       const query =
         "INSERT INTO users (username, email, password, first_name, last_name, date_of_birth, phone_number, state, city, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *";
       const values = [
@@ -52,14 +52,11 @@ module.exports = {
       const data = { email: email, password: password };
       await validateUserData(data);
 
-      const user = await findOneByEmail(email);
+      const user = await findUserByEmail(email);
 
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-
-      console.log(user);
-      console.log("hello");
 
       const result = await bcrypt.compare(password, user.password);
 
@@ -107,7 +104,7 @@ module.exports = {
   },
   delete: async function (data) {
     try {
-      const user = await findOneByEmail(data.email);
+      const user = await findUserByEmail(data.email);
 
       if (!user) {
         return { success: false, error: "User not found" };
@@ -124,6 +121,24 @@ module.exports = {
     } catch (err) {
       console.error("Error deleting user:", err);
       return { success: false, error: "Internal Server Error" };
+    }
+  },
+  findOneByEmail: async function (email) {
+    try {
+      const result = await db.query("SELECT * FROM users WHERE email = $1", [
+        email,
+      ]);
+
+      if (result.rows[0]) {
+        //returns all info on user
+
+        return result.rows[0];
+      } else {
+        return "No user found";
+      }
+    } catch (err) {
+      console.error("Error finding user by email:", err);
+      throw err;
     }
   },
 };
@@ -183,7 +198,7 @@ async function hashPassword(password) {
     throw err;
   }
 }
-async function findOneByEmail(email) {
+async function findUserByEmail(email) {
   try {
     const result = await db.query("SELECT * FROM users WHERE email = $1", [
       email,

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const User = require("../models/user.models");
+const Dog = require("../models/dogModels");
 
 module.exports.decodeJwt = async (req, res, next) => {
   try {
@@ -28,8 +28,8 @@ module.exports.decodeJwt = async (req, res, next) => {
 module.exports.verifyDogOwner = async (req, res, next) => {
   try {
     const requesterEmail = req.payload.email;
-    const dogId = req.params.id;
-    const dogOwnerEmail = await User.getDogOwner(dogId);
+    const dogId = req.params.dogId;
+    const dogOwnerEmail = await Dog.getDogOwner(dogId);
 
     if (!dogOwnerEmail || dogOwnerEmail.user_email !== requesterEmail) {
       res
