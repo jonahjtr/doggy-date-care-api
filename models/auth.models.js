@@ -63,6 +63,7 @@ module.exports = {
       if (result) {
         const token = jwt.sign(
           {
+            id: user.id,
             username: user.username,
             email: user.email,
             first_name: user.first_name,
@@ -75,6 +76,7 @@ module.exports = {
 
         const refreshToken = jwt.sign(
           {
+            id: user.id,
             username: user.username,
             email: user.email,
             first_name: user.first_name,
@@ -109,8 +111,8 @@ module.exports = {
       if (!user) {
         return { success: false, error: "User not found" };
       } else {
-        const query = "DELETE FROM users WHERE email = $1";
-        const result = await pool.query(query, [data.email]);
+        const query = "DELETE FROM users WHERE id = $1";
+        const result = await pool.query(query, [data.id]);
 
         if (result.rowCount > 0) {
           return { success: true };

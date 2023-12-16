@@ -1,22 +1,29 @@
+require("dotenv").config();
 const express = require("express");
 const router = express.Router();
+
 const authMiddleware = require("../../middleware/authMiddleware");
 const dogControllers = require("../../controllers/dogControllers");
+
 const medicineRoutes = require("./medicineRoutes");
+const photoRoutes = require("./photoRoutes");
 
-//   /dogs
+router.use("/medicine", medicineRoutes);
+router.use("/photos", photoRoutes);
 
-//GET
+// endpoint = /dogs
+
+//get all dogs from owner
 router.get("/", authMiddleware.decodeJwt, dogControllers.getAllDogs);
 
+//get specific dog
 router.get(
   "/:dogId",
   authMiddleware.decodeJwt,
   authMiddleware.verifyDogOwner,
   dogControllers.getDog
 );
-
-//PUT
+//Edit dog
 router.put(
   "/:dogId",
   authMiddleware.decodeJwt,
@@ -24,18 +31,15 @@ router.put(
   dogControllers.UpdateDog
 );
 
-//POST dog
+//create dog
 router.post("/", authMiddleware.decodeJwt, dogControllers.createDog);
 
-//DELETE
+//delete dog
 router.delete(
   "/:dogId",
   authMiddleware.decodeJwt,
   authMiddleware.verifyDogOwner,
   dogControllers.deleteDog
 );
-
-// medicineRoutes
-router.use("/medicine", medicineRoutes);
 
 module.exports = router;

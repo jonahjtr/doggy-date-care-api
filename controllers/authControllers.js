@@ -26,6 +26,7 @@ const getUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
+  console.log("loggin in");
   const { email, password } = req.body;
   Auth.verifyUser(req, res, email, password);
 };

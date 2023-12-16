@@ -27,11 +27,12 @@ module.exports.decodeJwt = async (req, res, next) => {
 
 module.exports.verifyDogOwner = async (req, res, next) => {
   try {
-    const requesterEmail = req.payload.email;
+    const requesterId = req.payload.id;
     const dogId = req.params.dogId;
-    const dogOwnerEmail = await Dog.getDogOwner(dogId);
 
-    if (!dogOwnerEmail || dogOwnerEmail.user_email !== requesterEmail) {
+    const dogOwnerId = await Dog.getDogOwnerId(dogId);
+
+    if (!requesterId || dogOwnerId !== requesterId) {
       res
         .status(403)
         .json({ message: "Unauthorized access or does not exist" });

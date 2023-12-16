@@ -1,11 +1,10 @@
-const pool = require("../config/db"); // Make sure to replace with the correct path
-const bcrypt = require("bcrypt");
 const Dog = require("../models/dogModels");
+const Photo = require("../models/photoModels");
 
 module.exports.getAllDogs = async (req, res) => {
   try {
-    const email = req.payload.email;
-    const results = await Dog.getAllDogs(email);
+    const user_id = req.payload.id;
+    const results = await Dog.getAllDogs(user_id);
 
     if (results) {
       console.log(results);
@@ -22,9 +21,13 @@ module.exports.getDog = async function (req, res) {
   const dogID = req.params.dogId;
   try {
     const result = await Dog.getDog(dogID);
+    const photos = await Photo.getAllPhotosFordog(dogID);
+
+    //call get all photos for dog, and make it add to the result object
     if (!result) {
       res.status(401).send("error finding dog");
     } else {
+      result.dog_photos = photos;
       res.status(200).json(result);
     }
   } catch (error) {
@@ -33,8 +36,10 @@ module.exports.getDog = async function (req, res) {
   }
 };
 module.exports.createDog = async function (req, res) {
+  const user_id = req.payload.id;
+  const dogInfo = req.body.data;
   try {
-    const result = await Dog.create(req.payload.email, req.body.data);
+    const result = await Dog.create(user_id, dogInfo);
     if (!result) {
       res.status(401).send("error creating dog");
     } else {
@@ -60,8 +65,9 @@ module.exports.UpdateDog = async function (req, res) {
   }
 };
 module.exports.deleteDog = async function (req, res) {
+  const user_id = req.payload.id;
   try {
-    const results = await Dog.delete(req.params.dogId, req.payload.email);
+    const results = await Dog.delete(req.params.dogId, user_id);
 
     if (results) {
       res.status(200).json(results);
@@ -84,7 +90,6 @@ module.exports.getMedicine = async function (req, res) {
   }
 };
 module.exports.createMedicines = async (req, res) => {
-  console.log(req.body);
   try {
     const medicinesData = req.body.medicine;
     const createdMedicines = await Dog.createMedicines(medicinesData);
