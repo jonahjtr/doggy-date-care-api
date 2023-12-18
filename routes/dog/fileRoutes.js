@@ -6,20 +6,21 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 const authMiddleware = require("../../middleware/authMiddleware");
-const photoControllers = require("../../controllers/photoControllers");
+const fileControllers = require("../../controllers/fileControllers");
 
 //GET
 router.get(
-  "/single/:photoName",
+  "/single/:fileName",
   authMiddleware.decodeJwt,
-  authMiddleware.verifyPhotoOwner,
-  photoControllers.getPhotoByName
+  authMiddleware.verifyFileOwner,
+  fileControllers.getFileByName
 );
 //get all by dog id
 router.get(
   "/:dogId",
   authMiddleware.decodeJwt,
-  photoControllers.getPhotosByDogId
+  authMiddleware.verifyDogOwner,
+  fileControllers.getFilesByDogId
 );
 //CREATE
 
@@ -27,14 +28,14 @@ router.post(
   "/:dogId",
   authMiddleware.decodeJwt,
   upload.single("file"),
-  photoControllers.postPhoto
+  fileControllers.postFile
 );
 //DELETE
 router.delete(
-  "/:photoName",
+  "/:fileName",
   authMiddleware.decodeJwt,
-  authMiddleware.verifyPhotoOwner,
-  photoControllers.deletePhoto
+  authMiddleware.verifyFileOwner,
+  fileControllers.deleteFile
 );
 
 module.exports = router;

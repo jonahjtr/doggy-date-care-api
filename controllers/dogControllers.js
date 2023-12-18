@@ -1,5 +1,6 @@
 const Dog = require("../models/dogModels");
 const Photo = require("../models/photoModels");
+const File = require("../models/fileModels");
 
 module.exports.getAllDogs = async (req, res) => {
   try {
@@ -17,17 +18,19 @@ module.exports.getAllDogs = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+
 module.exports.getDog = async function (req, res) {
   const dogID = req.params.dogId;
   try {
     const result = await Dog.getDog(dogID);
     const photos = await Photo.getAllPhotosFordog(dogID);
+    const files = await File.getAllFilesFordog(dogID);
 
-    //call get all photos for dog, and make it add to the result object
     if (!result) {
       res.status(401).send("error finding dog");
     } else {
       result.dog_photos = photos;
+      result.dog_files = files;
       res.status(200).json(result);
     }
   } catch (error) {

@@ -2,14 +2,6 @@ require("dotenv").config();
 const Photo = require("../models/photoModels");
 const crypto = require("crypto");
 
-// const s3 = new S3Client({
-//   credentials: {
-//     accessKeyId: accessKey,
-//     secretAccessKey: secretAccessKey,
-//   },
-//   region: bucketRegion,
-// });
-
 module.exports.getPhotosByUserId = async (req, res) => {
   try {
     const user_id = req.payload.id;
@@ -29,7 +21,6 @@ module.exports.getPhotosByDogId = async (req, res) => {
   try {
     const dog_id = req.params.dogId;
     const results = await Photo.getAllPhotosFordog(dog_id);
-    console.log(results);
     if (results) {
       res.status(200).send(results);
     } else {
@@ -46,7 +37,6 @@ module.exports.getPhotoByName = async (req, res) => {
     const photo_name = req.params.photoName;
     const results = await Photo.getPhotoFromS3(photo_name);
     if (results) {
-      console.log(results);
       res.status(200).send(results);
     } else {
       res.status(404).send("No photo found for the photo name");
@@ -73,6 +63,25 @@ module.exports.postPhoto = async (req, res) => {
     }
   } catch (err) {
     console.error("Error posting photos:", err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+module.exports.deletePhoto = async (req, res) => {
+  const photoName = req.params.photoName;
+  try {
+    const result = await Photo.getSpecificPhoto(photoName);
+    if (result) {
+      await Photo.deletePhotoFromS3(photoName);
+      const dbDelete = await Photo.deletePhotoFromDB(photoName);
+      res.status(200).send(dbDelete);
+    } else {
+      res
+        .status(500)
+        .send("not able to delete photo, does not exits, or bad query");
+    }
+  } catch (err) {
+    console.error("Error deleting photo:", err);
     res.status(500).send("Internal Server Error");
   }
 };

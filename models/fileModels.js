@@ -1,7 +1,6 @@
 const db = require("../config/db");
 const pool = require("../config/db");
-const sharp = require("sharp");
-
+const moment = require("moment");
 const { GetSignedUrl, getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const {
   S3Client,
@@ -24,10 +23,10 @@ const s3 = new S3Client({
 });
 
 module.exports = {
-  getAllPhotosForUser: async function (user_id) {
+  getAllFilesForUser: async function (user_id) {
     try {
       const query = `
-      SELECT * FROM photos
+      SELECT * FROM files
       WHERE user_id = $1;
     `;
       const values = [user_id];
@@ -35,169 +34,151 @@ module.exports = {
       if (result.rows.length < 1) return null;
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving photos for user:", error);
+      console.error("Error retrieving files for user:", error);
       throw error;
     }
   },
-  getSpecificPhoto: async function (photo_name) {
+  getSpecificFile: async function (file_name) {
     try {
       const query = `
-      SELECT * FROM photos
-      WHERE photo_name = $1;
+      SELECT * FROM files
+      WHERE file_name = $1;
     `;
-      const values = [photo_name];
+      const values = [file_name];
       const result = await pool.query(query, values);
       if (result.rows.length < 1) return null;
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving photos for user:", error);
+      console.error("Error retrieving file for user:", error);
       throw error;
     }
   },
-  getAllPhotosFordog: async function (dog_id) {
+  getAllFilesFordog: async function (dog_id) {
     try {
       const query = `
-      SELECT * FROM photos
+      SELECT * FROM files
       WHERE dog_id = $1;
     `;
       const values = [dog_id];
       const result = await pool.query(query, values);
 
-      const photoList = result.rows;
-      //gets all images from result of photo query by dog id
-      for (let photo of photoList) {
+      const fileList = result.rows;
+      for (let file of fileList) {
         const getObjectParams = {
           Bucket: bucketName,
-          Key: photo.photo_name,
+          Key: file.file_name,
         };
         const command = new GetObjectCommand(getObjectParams);
         const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
-        photo.photo_url = url;
+        file.file_url = url;
       }
 
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving photos for user:", error);
+      console.error("Error retrieving files for user:", error);
       throw error;
     }
   },
-  getPhotoOwnerId: async function (photoName) {
+  getFileOwnerId: async function (file_name) {
     try {
       const query = `
-      SELECT user_id  FROM photos
-      WHERE photo_name = $1;
+      SELECT user_id  FROM files
+      WHERE file_name = $1;
     `;
 
-      const values = [photoName];
+      const values = [file_name];
       const result = await pool.query(query, values);
-
-      if (result.rows.length > 0) {
+      if (result.rows[0].user_id) {
         return result.rows[0].user_id;
       } else {
         return null;
       }
     } catch (error) {
-      console.error("Error retrieving photo by name:", error);
+      console.error("Error retrieving file by name:", error);
       throw error;
     }
   },
-  postPhoto: async function (name) {
-    try {
-      const query = `
-      SELECT * FROM photos
-      WHERE name = $1;
-    `;
-      const values = [name];
-      const result = await pool.query(query, values);
-      if (result.rows.length < 1) return null;
-      return result.rows;
-    } catch (error) {
-      console.error("Error retrieving photos for user:", error);
-      throw error;
-    }
-  },
-  getPhotoFromS3: async function (photo_name) {
+  getFileFromS3: async function (file_name) {
     try {
       const getObjectParams = {
         Bucket: bucketName,
-        Key: photo_name,
+        Key: file_name,
       };
       const command = new GetObjectCommand(getObjectParams);
       const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
       return url;
     } catch (error) {
-      console.log("error retreiving photo url");
+      console.log("error retreiving file url");
       throw error;
     }
   },
-  postPhotoToS3: async function (photoName, data) {
-    const buffer = await sharp(data.buffer)
-      .resize({ height: 600, width: 600, fit: "contain" })
-      .toBuffer();
+  postFileToS3: async function (file_name, data) {
     try {
       const params = {
         Bucket: bucketName,
-        Key: photoName,
-        Body: buffer,
+        Key: file_name,
+        Body: data.buffer,
         ContentType: data.mimetype,
       };
       const command = new PutObjectCommand(params);
       await s3.send(command);
       return;
     } catch (error) {
-      console.error("Error uploading photo for user:", error);
+      console.error("Error uploading file for user:", error);
       throw error;
     }
   },
-  deletePhotoFromS3: async function (photoName) {
+  deleteFileFromS3: async function (file_name) {
     try {
       const params = {
         Bucket: bucketName,
-        Key: photoName,
+        Key: file_name,
       };
       const command = new DeleteObjectCommand(params);
       await s3.send(command);
 
       return;
     } catch (error) {
-      console.error("Error uploading photo for user:", error);
+      console.error("Error deleting file for user:", error);
       throw error;
     }
   },
-  postPhotoToDB: async function (name, user_id, dog_id) {
+  postFileToDB: async function (name, file_nickname, user_id, dog_id) {
+    const currentDate = moment().format("MMM Do YY");
+
     try {
       const query = `
-      INSERT INTO photos (photo_name,  user_id, dog_id)
-      VALUES ($1,$2,$3)
-      RETURNING photo_name;
+      INSERT INTO files (file_name,file_nickname, user_id, dog_id, upload_date)
+      VALUES ($1,$2,$3,$4,$5)
+      RETURNING file_nickname;
 
     `;
-      const values = [name, user_id, dog_id];
+      const values = [name, file_nickname, user_id, dog_id, currentDate];
       const result = await pool.query(query, values);
       if (result.rows.length < 1) {
-        console.log("error uploading photo");
+        console.log("error uploading file");
         throw error;
       } else {
         return result.rows[0];
       }
     } catch (error) {
-      console.error("Error uploading photo for user:", error);
+      console.error("Error uploading file for user:", error);
       throw error;
     }
   },
-  deletePhotoFromDB: async function (photoName) {
+  deleteFileFromDB: async function (file_name) {
     try {
-      const query = "DELETE FROM photos WHERE photo_name = $1 RETURNING *;";
-      const values = [photoName];
+      const query = "DELETE FROM files WHERE file_name = $1 RETURNING *;";
+      const values = [file_name];
       const result = await pool.query(query, values);
       if (result.rows.length < 1) {
-        console.log("error deleting photo in query");
+        console.log("error deleting file in query");
         throw error;
       } else {
         return result.rows[0];
       }
     } catch (error) {
-      console.error("Error deleting photo for user:", error);
+      console.error("Error deleting file for user:", error);
       throw error;
     }
   },

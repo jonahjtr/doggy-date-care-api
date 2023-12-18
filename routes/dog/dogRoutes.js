@@ -7,9 +7,10 @@ const dogControllers = require("../../controllers/dogControllers");
 
 const medicineRoutes = require("./medicineRoutes");
 const photoRoutes = require("./photoRoutes");
-
+const fileRoutes = require("./fileRoutes");
 router.use("/medicine", medicineRoutes);
 router.use("/photos", photoRoutes);
+router.use("/files", fileRoutes);
 
 // endpoint = /dogs
 
@@ -23,6 +24,7 @@ router.get(
   authMiddleware.verifyDogOwner,
   dogControllers.getDog
 );
+
 //Edit dog
 router.put(
   "/:dogId",
