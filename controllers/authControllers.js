@@ -1,14 +1,12 @@
-const pool = require("../config/db");
-const bcrypt = require("bcrypt");
 const Auth = require("../models/auth.models");
 
 const registerUser = async (req, res) => {
-  Auth.create(req.body)
+  Auth.create(req, res)
     .then(function (result) {
       console.log(`user created at ${JSON.stringify(result)} `);
       res.status(200).json(result);
     })
-    .catch((err) => err);
+    .catch((err) => res.status(401).send(err));
 };
 
 const getUser = async (req, res) => {
@@ -16,7 +14,7 @@ const getUser = async (req, res) => {
     const email = req.payload.email;
     const result = await User.findOneByEmail(email);
     if (!result) {
-      res.status(401).send("no user found");
+      res.status(404).send("no user found");
     } else {
       res.status(200).json(result);
     }
@@ -26,7 +24,6 @@ const getUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  console.log("loggin in");
   const { email, password } = req.body;
   Auth.verifyUser(req, res, email, password);
 };

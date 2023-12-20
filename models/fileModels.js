@@ -151,7 +151,6 @@ module.exports = {
       INSERT INTO files (file_name,file_nickname, user_id, dog_id, upload_date)
       VALUES ($1,$2,$3,$4,$5)
       RETURNING file_nickname;
-
     `;
       const values = [name, file_nickname, user_id, dog_id, currentDate];
       const result = await pool.query(query, values);
