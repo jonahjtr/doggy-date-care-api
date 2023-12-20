@@ -4,9 +4,11 @@ const pool = require("../config/db");
 const jwt = require("jsonwebtoken");
 
 module.exports = {
-  create: async function (data) {
+  create: async function (req, res) {
+    data = req.body;
     try {
       await validateUserData(data);
+
       const {
         username,
         email,
@@ -18,6 +20,7 @@ module.exports = {
         state,
         city,
       } = data;
+
       const hashedPassword = await hashPassword(password);
       const query =
         "INSERT INTO users (username, email, password, first_name, last_name, date_of_birth, phone_number, state, city, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *";
@@ -39,7 +42,7 @@ module.exports = {
       if (result.rows[0]) {
         return result.rows[0];
       } else {
-        throw new Error("User creation failed");
+        return "username already exists";
       }
     } catch (error) {
       console.error("Error:", error);
@@ -54,7 +57,7 @@ module.exports = {
 
       const user = await findUserByEmail(email);
 
-      if (!user) {
+      if (user == "No user found") {
         return res.status(404).json({ error: "User not found" });
       }
 
@@ -87,8 +90,8 @@ module.exports = {
           { expiresIn: "7d" }
         );
 
-        console.log("token", token);
-        console.log("refreshtoken", refreshToken);
+        // console.log("token", token);
+        // console.log("refreshtoken", refreshToken);
 
         res.status(200).json({
           message: "Login successful",
@@ -97,7 +100,7 @@ module.exports = {
           redirectTo: "/homepage",
         });
       } else {
-        throw "Incorrect password";
+        res.status(401).json({ error: "incorrect password" });
       }
     } catch (error) {
       console.error(error);
@@ -153,6 +156,23 @@ async function validateUserData(data) {
     await validatePassword(data.password, 6);
     await validateEmail(data.email);
     return;
+  } catch (err) {
+    throw err;
+  }
+}
+async function checkUsernameAvailability(username) {
+  try {
+    const result = await db.query("SELECT * FROM users WHERE username = $1", [
+      username,
+    ]);
+
+    if (result.rows[0]) {
+      //returns all info on user
+
+      return result.rows[0];
+    } else {
+      return "No user found";
+    }
   } catch (err) {
     throw err;
   }
