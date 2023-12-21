@@ -22,9 +22,8 @@ router.post(
 
 //PUT
 router.put(
-  "/:dogId/:medId",
+  "/:dogId/:medId", //dogid is null
   authMiddleware.decodeJwt,
-  authMiddleware.verifyDogOwner,
   dogMiddleware.verifyDogMedicine,
   medicineControllers.editMedicine
 );

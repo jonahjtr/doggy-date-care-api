@@ -9,6 +9,8 @@ module.exports.decodeJwt = async (req, res, next) => {
     const authHeader = req.headers["authorization"];
 
     if (!authHeader) {
+      console.log("Authorization header missing");
+
       return res.status(401).json({ message: "Authorization header missing" });
     }
 

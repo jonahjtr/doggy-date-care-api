@@ -14,7 +14,7 @@ module.exports.getMedicines = async function (req, res) {
 
 module.exports.createMedicines = async (req, res) => {
   const dogId = req.params.dogId;
-  const medicinesData = req.params.medId;
+  const medicinesData = req.body.medicine;
 
   try {
     const createdMedicines = await Medicine.create(medicinesData, dogId);
@@ -30,8 +30,8 @@ module.exports.createMedicines = async (req, res) => {
 };
 
 module.exports.editMedicine = async function (req, res) {
-  const medicineId = req.params.dogId;
-  const updateData = req.params.medId;
+  const updateData = req.body.medicine;
+  const medicineId = updateData.id;
 
   try {
     const updatedMedicine = await Medicine.edit(medicineId, updateData);

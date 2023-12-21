@@ -5,7 +5,6 @@ const medicine = require("../models/medicineModel");
 module.exports.verifyDogMedicine = async (req, res, next) => {
   const dogId = req.params.dogId;
   const medId = req.params.medId;
-
   try {
     const medicineList = await medicine.getMedicineIdsByDogId(dogId);
 

@@ -44,13 +44,14 @@ SELECT
   ) AS breed_info,
   json_agg(
     json_build_object(
-      'medicine_id', medicines.id,
-      'medicine_name', medicines.name,
-      'medicine_dosage', medicines.dosage,
-      'medicine_frequency', medicines.frequency,
-      'medicine_start_date', medicines.start_date,
-      'medicine_end_date', medicines.end_date,
-      'medicine_instructions', medicines.instructions
+      'id', medicines.id,
+      'name', medicines.name,
+      'dosage', medicines.dosage,
+      'frequency', medicines.frequency,
+      'start_date', medicines.start_date,
+      'end_date', medicines.end_date,
+      'instructions', medicines.instructions,
+      'description', medicines.description
     )
   ) AS medicines
 FROM
