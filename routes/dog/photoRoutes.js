@@ -22,12 +22,17 @@ router.get(
   photoControllers.getPhotosByDogId
 );
 //CREATE
-
 router.post(
   "/:dogId",
   authMiddleware.decodeJwt,
   upload.single("file"),
   photoControllers.postPhoto
+);
+router.post(
+  "/profile/:dogId",
+  authMiddleware.decodeJwt,
+  upload.single("file"),
+  photoControllers.postProfilePhoto
 );
 //DELETE
 router.delete(

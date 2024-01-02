@@ -29,8 +29,14 @@ module.exports.getDog = async function (req, res) {
     if (!result) {
       res.status(401).send("error finding dog");
     } else {
+      console.log(result);
+      const profile_photo = await Photo.getPhotoFromS3(
+        result.dog_profile_picture
+      );
+      console.log(profile_photo);
       result.dog_photos = photos;
       result.dog_files = files;
+      result.dog_profile_picture = profile_photo;
       res.status(200).json(result);
     }
   } catch (error) {

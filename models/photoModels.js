@@ -185,6 +185,30 @@ module.exports = {
       throw error;
     }
   },
+  updateProfilePhotoInDB: async function (name, dogId) {
+    console.log("name", name);
+    try {
+      const query = `
+      UPDATE dogs
+      SET profile_picture = $1
+      WHERE id = $2
+      RETURNING profile_picture;
+    `;
+      const values = [name, dogId];
+      const result = await pool.query(query, values);
+
+      if (result.rows.length < 1) {
+        console.log("Error updating profile photo");
+        throw new Error("No rows were updated.");
+      } else {
+        return result.rows[0].profile_picture;
+      }
+    } catch (error) {
+      console.error("Error updating profile photo:", error);
+      throw error;
+    }
+  },
+
   deletePhotoFromDB: async function (photoName) {
     try {
       const query = "DELETE FROM photos WHERE photo_name = $1 RETURNING *;";
