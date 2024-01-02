@@ -7,7 +7,6 @@ module.exports.getPhotosByUserId = async (req, res) => {
     const user_id = req.payload.id;
     const results = await Photo.getAllPhotosForUser(user_id);
     if (results) {
-      console.log(results);
       res.status(200).send(results);
     } else {
       res.status(404).send("No photos found for the user");
@@ -46,7 +45,26 @@ module.exports.getPhotoByName = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
+module.exports.postProfilePhoto = async (req, res) => {
+  const data = req.file;
+  const user_id = req.payload.id;
+  const dog_id = req.params.dogId;
 
+  const randomizeImageName = () => crypto.randomBytes(32).toString("hex");
+  try {
+    const photoName = randomizeImageName();
+    const results = await Photo.postPhotoToS3(photoName, data);
+    const dbStorage = await Photo.updateProfilePhotoInDB(photoName, dog_id);
+    if (dbStorage) {
+      res.status(200).send(results);
+    } else {
+      res.status(500).send("not able to post photo ");
+    }
+  } catch (err) {
+    console.error("Error posting photos:", err);
+    res.status(500).send("Internal Server Error");
+  }
+};
 module.exports.postPhoto = async (req, res) => {
   const data = req.file;
   const user_id = req.payload.id;

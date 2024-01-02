@@ -1,4 +1,3 @@
-const db = require("../config/db");
 const pool = require("../config/db");
 module.exports = {
   getUserAndDogs: async function (email) {
@@ -69,6 +68,69 @@ GROUP BY
 
         return row;
       });
+    } catch (error) {
+      console.error("Error retrieving user and dogs:", error);
+      throw error;
+    }
+  },
+  getUserInfo: async function (userId) {
+    try {
+      // Use a SQL JOIN to fetch user data and associated dog data
+      const result = await pool.query(
+        `
+SELECT
+  users.id AS user_id,
+  users.username,
+  users.email AS user_email,
+  users.first_name,
+  users.last_name,
+  users.date_of_birth,
+  users.phone_number,
+  users.state,
+  users.city,
+  COALESCE(dogs.dogs, '[]'::json) AS dogs,
+  COALESCE(date_events.date_events, '[]'::json) AS date_events
+FROM users
+LEFT JOIN (
+  SELECT
+    user_id,
+    json_agg(
+      json_build_object(
+        'dog_id', id,
+        'dog_name', name,
+        'dog_profile_picture', profile_picture
+      )
+    ) AS dogs
+  FROM dogs
+  GROUP BY user_id
+) AS dogs ON users.id = dogs.user_id
+LEFT JOIN (
+  SELECT
+    user_id,
+    json_agg(
+      json_build_object(
+        'id', date_id,
+        'dog_id', dog_id,
+        'title', title,
+        'description', description,
+        'date', start_date_time,
+        'endDate', end_date_time
+      )
+    ) AS date_events
+  FROM dates
+  GROUP BY user_id
+) AS date_events ON users.id = date_events.user_id
+WHERE users.id = $1;
+
+    `,
+        [userId]
+      );
+
+      if (result.rows.length === 0) {
+        console.error("User not found");
+      }
+
+      return result.rows[0];
     } catch (error) {
       console.error("Error retrieving user and dogs:", error);
       throw error;

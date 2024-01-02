@@ -1,10 +1,22 @@
-const pool = require("../config/db"); // Make sure to replace with the correct path
 const User = require("../models/userModels");
+const Photo = require("../models/photoModels");
 
 const getUser = async (req, res) => {
   try {
-    const email = req.payload.email;
-    const result = await User.getUserAndDogs(email);
+    const id = req.payload.id;
+
+    const result = await User.getUserInfo(id);
+
+    const profileUrlsPromises = result.dogs.map(async (dog) => {
+      const url = await Photo.getPhotoFromS3(dog.dog_profile_picture);
+      dog.dog_profile_url = url;
+      return url;
+    });
+
+    const profileUrls = await Promise.all(profileUrlsPromises);
+
+    //dates here from calendar by user_id
+
     if (!result) {
       res.status(401).send("no user found");
     } else {
