@@ -25,6 +25,7 @@ const s3 = new S3Client({
 
 module.exports = {
   getAllPhotosForUser: async function (user_id) {
+    console.log("working");
     try {
       const query = `
       SELECT * FROM photos
@@ -33,6 +34,17 @@ module.exports = {
       const values = [user_id];
       const result = await pool.query(query, values);
       if (result.rows.length < 1) return null;
+      const photoList = result.rows;
+      //gets all images from result of photo query by dog id
+      for (let photo of photoList) {
+        const getObjectParams = {
+          Bucket: bucketName,
+          Key: photo.photo_name,
+        };
+        const command = new GetObjectCommand(getObjectParams);
+        const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+        photo.photo_url = url;
+      }
       return result.rows;
     } catch (error) {
       console.error("Error retrieving photos for user:", error);
@@ -78,26 +90,6 @@ module.exports = {
       return result.rows;
     } catch (error) {
       console.error("Error retrieving photos for user:", error);
-      throw error;
-    }
-  },
-  getPhotoOwnerId: async function (photoName) {
-    try {
-      const query = `
-      SELECT user_id  FROM photos
-      WHERE photo_name = $1;
-    `;
-
-      const values = [photoName];
-      const result = await pool.query(query, values);
-
-      if (result.rows.length > 0) {
-        return result.rows[0].user_id;
-      } else {
-        return null;
-      }
-    } catch (error) {
-      console.error("Error retrieving photo by name:", error);
       throw error;
     }
   },

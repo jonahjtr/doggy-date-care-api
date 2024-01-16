@@ -11,6 +11,18 @@ module.exports.getMedicines = async function (req, res) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+module.exports.getMedicinesByUserId = async function (req, res) {
+  const user_id = req.payload.id;
+
+  try {
+    const medicines = await Medicine.getMedicinesByUserId(user_id);
+
+    res.status(200).json({ medicines });
+  } catch (error) {
+    console.error("Error fetching medicines:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
 
 module.exports.createMedicines = async (req, res) => {
   const dogId = req.params.dogId;

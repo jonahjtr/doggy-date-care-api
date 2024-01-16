@@ -1,5 +1,3 @@
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
 const medicine = require("../models/medicineModel");
 
 module.exports.verifyDogMedicine = async (req, res, next) => {

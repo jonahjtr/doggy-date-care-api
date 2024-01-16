@@ -3,38 +3,36 @@ const router = express.Router();
 const authMiddleware = require("../../middleware/authMiddleware");
 const medicineControllers = require("../../controllers/medicineControllers");
 const dogMiddleware = require("../../middleware/dogMiddleware");
+const calendarControllers = require("../../controllers/calendarControllers");
+
 // dogs/calendar
 
-//GET
+//GET - get all calendar dates
+router.get("/", authMiddleware.decodeJwt, calendarControllers.allDates);
+//get dates by dog
 router.get(
   "/:dogId",
   authMiddleware.decodeJwt,
   authMiddleware.verifyDogOwner,
-  medicineControllers.getMedicines
+  calendarControllers.getDatesByDogId
 );
-//CREATE
+
+//PUT - edit date
+// router.put("/:dogId", authMiddleware.decodeJwt, authMiddleware.verifyDogOwner);
+
+//POST - create date
 router.post(
   "/:dogId",
   authMiddleware.decodeJwt,
   authMiddleware.verifyDogOwner,
-  medicineControllers.createMedicines
+  calendarControllers.createDate
 );
 
-//PUT
-router.put(
-  "/:dogId/:medId", //dogid is null
-  authMiddleware.decodeJwt,
-  dogMiddleware.verifyDogMedicine,
-  medicineControllers.editMedicine
-);
-
-//DELETE
+//DELETE - delete date
 router.delete(
-  "/:dogId/:medId",
+  "/:dogId/:dateId",
   authMiddleware.decodeJwt,
-  authMiddleware.verifyDogOwner,
-  dogMiddleware.verifyDogMedicine,
-  medicineControllers.deleteMedicine
+  authMiddleware.verifyDogOwner
 );
 
 module.exports = router;

@@ -1,5 +1,7 @@
 const db = require("../config/db");
 const pool = require("../config/db");
+const { DatabaseError } = require("../utils/errorHandlers/DataBaseErrors");
+
 module.exports = {
   getAllDogs: async function (user_id) {
     try {
@@ -9,12 +11,22 @@ module.exports = {
     `;
       const values = [user_id];
       const result = await pool.query(query, values);
-      return result.rows;
+
+      if (!result.rows) {
+        throw new DatabaseError("No dogs found for this user", 404); // Custom error for "Not Found"
+      }
+
+      if (result.rows.length === 0) {
+        return false; // Return false when there are no dogs
+      }
+
+      return result.rows; // Return all dogs when there are multiple dogs
     } catch (error) {
       console.error("Error retrieving dogs for user:", error);
       throw error;
     }
   },
+
   getDog: async function (dogId) {
     try {
       const query = `
@@ -79,40 +91,16 @@ GROUP BY
       throw error;
     }
   },
-  getDogOwnerId: async function (dogId) {
-    try {
-      const query = `
-      SELECT user_id  FROM dogs
-      WHERE id = $1;
-    `;
-
-      const values = [dogId];
-      const result = await pool.query(query, values);
-
-      if (result.rows.length > 0) {
-        return result.rows[0].user_id;
-      } else {
-        return null;
-      }
-    } catch (error) {
-      console.error("Error retrieving dog by ID:", error);
-      throw error;
-    }
-  },
 
   create: async function (ownerId, data) {
-    if (!data.profile_picture || data.profile_picture === "undefined")
-      data.profile_picture = "null";
     try {
-      const query = `INSERT INTO dogs (user_id, name, date_of_birth, age,sex, breed, profile_picture) VALUES ($1, $2, $3, $4, $5, $6, $7) returning *`;
+      const query = `INSERT INTO dogs (user_id, name, date_of_birth,sex, breed) VALUES ($1, $2, $3, $4, $5) returning *`;
       const values = [
         ownerId,
         data.name,
         data.date_of_birth,
-        data.age,
         data.sex,
         data.breed,
-        data.profile_picture,
       ];
       const result = await pool.query(query, values);
       if (!result) {
@@ -174,72 +162,6 @@ GROUP BY
       return result.rows[0];
     } catch (error) {
       console.log(error);
-      throw error;
-    }
-  },
-  getMedicines: async function (dogId) {
-    try {
-      const query = "SELECT * FROM medicines WHERE dog_id = $1";
-      const values = [dogId];
-
-      const result = await pool.query(query, values);
-      return result.rows;
-    } catch (error) {
-      console.error("Error retrieving medicines:", error);
-      throw error;
-    }
-  },
-  createMedicines: async function (medicinesData) {
-    try {
-      const values = medicinesData.map((medicineData) => {
-        const { dogId, name, dosage, description } = medicineData;
-        return [dogId, name, dosage, description];
-      });
-
-      const query = `
-        INSERT INTO medicines (dog_id, name, dosage, description)
-        VALUES ${values
-          .map(
-            (_, index) =>
-              `($${index * 4 + 1}, $${index * 4 + 2}, $${index * 4 + 3}, $${
-                index * 4 + 4
-              })`
-          )
-          .join(",")}
-        RETURNING *;
-      `;
-
-      const flatValues = values.flat();
-      const result = await pool.query(query, flatValues);
-
-      if (result.rows.length > 0) {
-        return result.rows;
-      } else {
-        throw new Error("Medicine creation failed");
-      }
-    } catch (error) {
-      console.error("Error creating medicines:", error);
-      throw error;
-    }
-  },
-  addPicture: async function (dogId, pictureName, user_id) {
-    try {
-      // Insert the data into the PostgreSQL database
-      const query = `
-      INSERT INTO dog_pictures (dog_id, picture_name, user_id )
-      VALUES ($1, $2, $3, $4)
-    `;
-      const values = [dogId, pictureName, user_id];
-      const result = await pool.query(query, values);
-
-      if (result) {
-        return result;
-      } else {
-        console.log("error with queue");
-      }
-    } catch (error) {
-      console.error("Error inserting picture:", error);
-      console.log(error, "error posting picture");
       throw error;
     }
   },

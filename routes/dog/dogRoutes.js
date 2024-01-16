@@ -5,14 +5,16 @@ const router = express.Router();
 const authMiddleware = require("../../middleware/authMiddleware");
 const dogControllers = require("../../controllers/dogControllers");
 
+const calendarRoutes = require("./calendarRoutes");
 const medicineRoutes = require("./medicineRoutes");
 const photoRoutes = require("./photoRoutes");
 const fileRoutes = require("./fileRoutes");
 router.use("/medicine", medicineRoutes);
 router.use("/photos", photoRoutes);
 router.use("/files", fileRoutes);
+router.use("/calendar", calendarRoutes);
 
-// endpoint = /dogs
+///dogs
 
 //get all dogs from owner
 router.get("/", authMiddleware.decodeJwt, dogControllers.getAllDogs);
