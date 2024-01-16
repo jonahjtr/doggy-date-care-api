@@ -9,7 +9,6 @@ module.exports.decodeJwt = async (req, res, next) => {
 
     if (!authHeader) {
       console.log("Authorization header missing");
-
       return res.status(401).json({ message: "Authorization header missing" });
     }
 
@@ -19,10 +18,10 @@ module.exports.decodeJwt = async (req, res, next) => {
     if (!payload) {
       return res.status(403).json({ message: "Unauthorized access" });
     }
-
     req.payload = payload;
     next();
   } catch (error) {
+    //find common errors like malformed token and return for each maybe? look up best practices
     console.error("Error decoding JWT:", error);
     return res.status(401).json({ message: "Invalid token" });
   }
@@ -32,17 +31,18 @@ module.exports.verifyDogOwner = async (req, res, next) => {
   try {
     const requesterId = req.payload.id;
     const dogId = req.params.dogId;
-    console.log(requesterId, dogId);
     const dogOwnerId = await Auth.getDogOwnerId(dogId);
-
-    if (!requesterId || dogOwnerId !== requesterId) {
-      res
-        .status(403)
-        .json({ message: "Unauthorized access or does not exist" });
+    if (!requesterId)
+      res.status(401).json({ message: "Problem finding userId" });
+    if (!dogOwnerId)
+      res.status(404).json({ message: "no owner connected to dog" });
+    if (dogOwnerId !== requesterId) {
+      res.status(403).json({ message: "Unauthorized access to dog" });
     } else {
       next();
     }
   } catch (error) {
+    //add error handling for if no dog by that dogId is found
     console.error("Error verifying dog owner:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
@@ -53,14 +53,24 @@ module.exports.verifyPhotoOwner = async (req, res, next) => {
     const requesterId = req.payload.id;
     const photoName = req.params.photoName;
     const photoOwnerId = await Auth.getPhotoOwnerId(photoName);
-    if (!requesterId || photoOwnerId !== requesterId) {
+
+    if (!requesterId)
+      return res.status(400).json({
+        message: "problem finding the userId",
+      });
+    if (!photoOwnerId)
+      res
+        .status(404)
+        .json({ message: "photo owner is not connected to photo" });
+    if (photoOwnerId !== requesterId) {
       res.status(403).json({
-        message: "Unauthorized access to photo or photo does not exist",
+        message: "Unauthorized access to photo.",
       });
     } else {
       next();
     }
   } catch (error) {
+    //add function for errors explain if photoName is not found
     console.error("Error verifying photo owner:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
@@ -69,18 +79,20 @@ module.exports.verifyFileOwner = async (req, res, next) => {
   try {
     const requesterId = req.payload.id;
     const file_name = req.params.fileName;
-    console.log(file_name);
-
     const fileOwnerId = await Auth.getFileOwnerId(file_name);
-    if (!requesterId || fileOwnerId !== requesterId) {
-      console.log(requesterId, fileOwnerId);
+    if (!fileOwnerId)
+      return res.status(404).json({ message: "no user linked to file" });
+    if (!requesterId)
+      return res.status(401).json({ message: "problem finding the user Id" });
+    if (fileOwnerId !== requesterId) {
       res.status(403).json({
-        message: "Unauthorized access to file or file does not exist",
+        message: "Unauthorized access to file",
       });
     } else {
       next();
     }
   } catch (error) {
+    //error handling on if there is no file with that name
     console.error("Error verifying file owner:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
