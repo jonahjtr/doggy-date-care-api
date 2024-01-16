@@ -22,6 +22,18 @@ module.exports = {
       throw error;
     }
   },
+  getMedicinesByUserId: async function (userId) {
+    try {
+      const query = "SELECT * FROM medicines WHERE user_id = $1";
+      const values = [userId];
+
+      const result = await pool.query(query, values);
+      return result.rows;
+    } catch (error) {
+      console.error("Error retrieving medicines:", error);
+      throw error;
+    }
+  },
   create: async function (medicineData, dogId) {
     try {
       const {

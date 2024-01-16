@@ -2,63 +2,54 @@ const db = require("../config/db");
 const bcrypt = require("bcrypt");
 const pool = require("../config/db");
 const jwt = require("jsonwebtoken");
+const Dog = require("../models/dogModels");
 
 module.exports = {
   create: async function (req, res) {
-    data = req.body;
+    const data = req.body;
     try {
       await validateUserData(data);
 
-      const {
-        username,
-        email,
-        password,
-        first_name,
-        last_name,
-        date_of_birth,
-        phone_number,
-        state,
-        city,
-      } = data;
+      const { username, email, password, first_name, last_name } = data;
 
       const hashedPassword = await hashPassword(password);
       const query =
-        "INSERT INTO users (username, email, password, first_name, last_name, date_of_birth, phone_number, state, city, role) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *";
-      const values = [
-        username,
-        email,
-        hashedPassword,
-        first_name,
-        last_name,
-        date_of_birth,
-        phone_number,
-        state,
-        city,
-        "user",
-      ];
+        "INSERT INTO users (username, email, password, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING *";
+      const values = [username, email, hashedPassword, first_name, last_name];
 
       const result = await pool.query(query, values);
-      // console.log("logging result inside create", result.rows[0]);
+      console.log("logging result inside create", result.rows[0]);
       if (result.rows[0]) {
         return result.rows[0];
       } else {
         return "username already exists";
       }
     } catch (error) {
+      if (error.code === "23505") {
+        throw { status: 400, error: error.detail }; // Throw an error object with status and error message
+      }
       console.error("Error:", error);
       throw error;
     }
   },
-
-  verifyUser: async function (req, res, email, password) {
+  verifyUser: async function (email, password) {
     try {
       const data = { email: email, password: password };
       await validateUserData(data);
 
       const user = await findUserByEmail(email);
 
-      if (user == "No user found") {
-        return res.status(404).json({ error: "User not found" });
+      if (user === "No user found") {
+        return { status: 404, error: "User not found" };
+      }
+
+      let hasDogs;
+      try {
+        const dogs = await Dog.getAllDogs(user.id);
+        hasDogs = Array.isArray(dogs) && dogs.length > 0;
+      } catch (dogError) {
+        console.error("Error retrieving dogs:", dogError);
+        return { status: 500, error: "Error retrieving dogs" };
       }
 
       const result = await bcrypt.compare(password, user.password);
@@ -90,23 +81,26 @@ module.exports = {
           { expiresIn: "7d" }
         );
 
-        // console.log("token", token);
-        // console.log("refreshtoken", refreshToken);
+        console.log("do they have dogs? ", hasDogs);
 
-        res.status(200).json({
-          message: "Login successful",
-          token,
-          refreshToken,
-          redirectTo: "/homepage",
-        });
+        return {
+          status: 200,
+          data: {
+            message: "Login successful",
+            token,
+            refreshToken,
+            hasDogs: hasDogs,
+          },
+        };
       } else {
-        res.status(401).json({ error: "incorrect password" });
+        return { status: 401, error: "Incorrect password" };
       }
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: "Internal Server Error" });
+      return { status: 500, error: "Internal Server Error" };
     }
   },
+
   delete: async function (data) {
     try {
       const user = await findUserByEmail(data.email);
@@ -144,6 +138,65 @@ module.exports = {
     } catch (err) {
       console.error("Error finding user by email:", err);
       throw err;
+    }
+  },
+  getDogOwnerId: async function (dogId) {
+    try {
+      const query = `
+      SELECT user_id  FROM dogs
+      WHERE id = $1;
+    `;
+
+      const values = [dogId];
+      const result = await pool.query(query, values);
+
+      if (result.rows.length > 0) {
+        return result.rows[0].user_id;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error("Error retrieving dog by ID:", error);
+      throw error;
+    }
+  },
+  getPhotoOwnerId: async function (photoName) {
+    try {
+      const query = `
+      SELECT user_id  FROM photos
+      WHERE photo_name = $1;
+    `;
+
+      const values = [photoName];
+      const result = await pool.query(query, values);
+
+      if (result.rows.length > 0) {
+        return result.rows[0].user_id;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error("Error retrieving photo by name:", error);
+      throw error;
+    }
+  },
+  getFileOwnerId: async function (file_name) {
+    try {
+      const query = `
+      SELECT user_id  FROM files
+      WHERE file_name = $1;
+    `;
+
+      const values = [file_name];
+      const result = await pool.query(query, values);
+      if (result.rows[0].user_id) {
+        return result.rows[0].user_id;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error("Error retrieving file by name:", error);
+      throw error;
     }
   },
 };

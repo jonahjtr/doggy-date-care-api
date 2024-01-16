@@ -79,25 +79,7 @@ module.exports = {
       throw error;
     }
   },
-  getFileOwnerId: async function (file_name) {
-    try {
-      const query = `
-      SELECT user_id  FROM files
-      WHERE file_name = $1;
-    `;
 
-      const values = [file_name];
-      const result = await pool.query(query, values);
-      if (result.rows[0].user_id) {
-        return result.rows[0].user_id;
-      } else {
-        return null;
-      }
-    } catch (error) {
-      console.error("Error retrieving file by name:", error);
-      throw error;
-    }
-  },
   getFileFromS3: async function (file_name) {
     try {
       const getObjectParams = {

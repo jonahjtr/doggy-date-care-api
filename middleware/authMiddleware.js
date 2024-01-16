@@ -1,8 +1,7 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const Dog = require("../models/dogModels");
 const Photo = require("../models/photoModels");
-const File = require("../models/fileModels");
+const Auth = require("../models/auth.models");
 
 module.exports.decodeJwt = async (req, res, next) => {
   try {
@@ -20,6 +19,7 @@ module.exports.decodeJwt = async (req, res, next) => {
     if (!payload) {
       return res.status(403).json({ message: "Unauthorized access" });
     }
+
     req.payload = payload;
     next();
   } catch (error) {
@@ -32,8 +32,8 @@ module.exports.verifyDogOwner = async (req, res, next) => {
   try {
     const requesterId = req.payload.id;
     const dogId = req.params.dogId;
-
-    const dogOwnerId = await Dog.getDogOwnerId(dogId);
+    console.log(requesterId, dogId);
+    const dogOwnerId = await Auth.getDogOwnerId(dogId);
 
     if (!requesterId || dogOwnerId !== requesterId) {
       res
@@ -52,7 +52,7 @@ module.exports.verifyPhotoOwner = async (req, res, next) => {
   try {
     const requesterId = req.payload.id;
     const photoName = req.params.photoName;
-    const photoOwnerId = await Photo.getPhotoOwnerId(photoName);
+    const photoOwnerId = await Auth.getPhotoOwnerId(photoName);
     if (!requesterId || photoOwnerId !== requesterId) {
       res.status(403).json({
         message: "Unauthorized access to photo or photo does not exist",
@@ -71,7 +71,7 @@ module.exports.verifyFileOwner = async (req, res, next) => {
     const file_name = req.params.fileName;
     console.log(file_name);
 
-    const fileOwnerId = await File.getFileOwnerId(file_name);
+    const fileOwnerId = await Auth.getFileOwnerId(file_name);
     if (!requesterId || fileOwnerId !== requesterId) {
       console.log(requesterId, fileOwnerId);
       res.status(403).json({
