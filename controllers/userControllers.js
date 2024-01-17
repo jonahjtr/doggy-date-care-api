@@ -1,38 +1,35 @@
 const User = require("../models/userModels");
 const Photo = require("../models/photoModels");
-const { DatabaseError } = require("../utils/errorHandlers/DataBaseErrors");
+const { handleServerError } = require("../utils/errorHandlers/errorHandlers");
 
 const getUser = async (req, res) => {
   try {
     const id = req.payload.id;
 
     const result = await User.getUserInfo(id);
-    if (!result) {
-      // Handle the "Not Found" error (no user found)
-      console.error(`user not found`);
-      res.status(401).send("No user found");
-    }
 
-    // Fetch profile photos for each dog in parallel
-    let profileUrlsPromises;
     if (result.dogs && result.dogs.length > 0) {
-      profileUrlsPromises = result.dogs.map(async (dog) => {
+      const profileUrlsPromises = [];
+
+      for (const dog of result.dogs) {
         if (dog.dog_profile_picture) {
-          const url = await Photo.getPhotoFromS3(dog.dog_profile_picture);
-          dog.dog_profile_url = url;
+          profileUrlsPromises.push(async () => {
+            try {
+              const url = await Photo.getPhotoFromS3(dog.dog_profile_picture);
+              dog.dog_profile_url = url;
+            } catch (error) {
+              handleServerError(res, error);
+            }
+          });
         }
-        return;
-      });
+      }
+
+      await Promise.all(profileUrlsPromises);
     }
-
-    const profileUrls = await Promise.all(profileUrlsPromises);
-
-    // Fetch dates from calendar by user_id here (add your code)
 
     res.status(200).json(result);
   } catch (error) {
-    console.error("Error getting user:", error);
-    res.status(500).send("Internal Server Error");
+    handleServerError(res, error);
   }
 };
 

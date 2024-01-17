@@ -1,26 +1,4 @@
 const pool = require("../config/db");
-const { DatabaseError } = require("../utils/errorHandlers/DataBaseErrors");
-
-const { GetSignedUrl, getSignedUrl } = require("@aws-sdk/s3-request-presigner");
-const {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-} = require("@aws-sdk/client-s3");
-
-const bucketName = process.env.BUCKET_NAME;
-const bucketRegion = process.env.BUCKET_REGION;
-const accessKey = process.env.ACCESS_KEY;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY;
-
-const s3 = new S3Client({
-  credentials: {
-    accessKeyId: accessKey,
-    secretAccessKey: secretAccessKey,
-  },
-  region: bucketRegion,
-});
 
 module.exports = {
   getUserInfo: async function (userId) {
@@ -76,23 +54,18 @@ WHERE users.id = $1;
     `,
         [userId]
       );
-
-      if (result.rows.length === 0) {
-        // Handle the "Not Found" error (no user info found)
-        throw new DatabaseError("No user info found", 404);
+      if (!result) {
+        const error = new Error("Problem with database finding user by email");
+        error.status = 500;
       }
-
+      if (result.rows.length === 0) {
+        const error = new Error("No User Found by that ID");
+        error.status = 404;
+        throw error;
+      }
       return result.rows[0];
     } catch (error) {
-      if (error instanceof DatabaseError && error.status === 404) {
-        // Handle the "Not Found" error (no user info found)
-        console.error(`${error.name}: ${error.message}`);
-        // Send a 404 response or take appropriate action
-      } else {
-        // Handle other types of errors (e.g., internal server errors)
-        console.error("Error retrieving user info:", error);
-        // Send a 500 response or take appropriate action
-      }
+      throw error;
     }
   },
 };
