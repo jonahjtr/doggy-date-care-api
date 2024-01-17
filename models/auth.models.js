@@ -5,45 +5,40 @@ const jwt = require("jsonwebtoken");
 const Dog = require("../models/dogModels");
 
 module.exports = {
-  create: async function (req, res) {
-    const data = req.body;
-
-    if (
-      !data.username ||
-      !data.email ||
-      !data.password ||
-      !data.first_name ||
-      !data.last_name
-    ) {
-      const error = new Error("Missing required fields");
-      error.status = 400;
-      throw error;
-    }
+  create: async function (data) {
+    console.log("data inside create function", data);
     try {
       await validateUserData(data);
 
       const { username, email, password, first_name, last_name } = data;
       const hashedPassword = await hashPassword(password);
       const query =
-        "INSERT INTO users (username, email, password, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING *";
+        "INSERT INTO users (username, email, password, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING username, email, first_name, last_name";
+
       const values = [username, email, hashedPassword, first_name, last_name];
       const result = await pool.query(query, values);
-      if (result.rows[0]) {
+
+      if (result.rows.length === 1) {
+        // Check if exactly one row was returned
         return result.rows[0];
       } else {
-        const error = new Error("error Creating User");
+        const error = new Error("User creation failed");
         error.status = 500;
         throw error;
       }
     } catch (error) {
       if (error.code === "23505") {
-        const error = new Error(error.detail);
-        error.status = 400;
-        throw error;
+        const uniqueConstraintError = new Error(
+          "User with this email or username already exists"
+        );
+        uniqueConstraintError.status = 400;
+
+        throw uniqueConstraintError;
       }
       throw error;
     }
   },
+
   verifyUser: async function (email, password) {
     try {
       const data = { email: email, password: password };
@@ -51,7 +46,7 @@ module.exports = {
       const user = await findUserByEmail(email);
 
       if (user.length === 0) {
-        const error = new Error("user Not found");
+        const error = new Error("User Not found");
         error.status = 404;
         throw error;
       }

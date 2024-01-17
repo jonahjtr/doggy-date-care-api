@@ -1,49 +1,32 @@
 const Auth = require("../models/auth.models");
-const Dog = require("../models/dogModels");
+const User = require("../models/userModels");
+const { handleServerError } = require("../utils/errorHandlers/errorHandlers");
 
 const registerUser = async (req, res) => {
   try {
-    const result = await Auth.create(req, res);
+    const user = await Auth.create(req.body);
 
-    if (typeof result === "object" && result !== null) {
-      res.status(200).json(result); // Sending success response
-    } else if (result === "username already exists") {
-      res.status(400).json({ error: result }); // Sending error response
-    } else {
-      // Handle other error cases
-      res.status(500).json({ error: "Internal server error" });
-    }
+    res.status(201).json({ user });
   } catch (error) {
-    console.log(error);
-    if (error.status) {
-      res.status(error.status).json({ error: error.error }); // Sending specific error response
-    } else {
-      res.status(500).json({ error: "Internal server error" });
-    }
+    handleServerError(res, error);
   }
 };
-
 const getUser = async (req, res) => {
   try {
-    const email = req.payload.email;
-    const result = await User.findOneByEmail(email);
+    const userId = req.payload.id;
+    const result = await User.getUserInfo(userId);
     if (!result) {
       res.status(404).send("no user found");
     } else {
       res.status(200).json(result);
     }
   } catch (error) {
-    if (error.status) {
-      res.status(error.status).json({ error: error.error }); // Sending specific error response
-    } else {
-      res.status(500).json({ error: "Internal server error" });
-    }
+    handleServerError(res, error);
   }
 };
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
-
   try {
     const verificationResult = await Auth.verifyUser(email, password);
 
@@ -51,12 +34,7 @@ const loginUser = async (req, res) => {
       res.status(200).json(verificationResult.data);
     }
   } catch (error) {
-    console.error(error);
-    if (error.status) {
-      res.status(error.status).json({ error: error.error }); // Sending specific error response
-    } else {
-      res.status(500).json({ error: "Internal server error" });
-    }
+    handleServerError(res, error);
   }
 };
 
@@ -66,11 +44,7 @@ const deleteUser = async (req, res) => {
     const result = await Auth.delete(data);
     if (result.success == true) res.status(200).send("user deleted");
   } catch (error) {
-    if (error.status) {
-      res.status(error.status).json({ error: error.error }); // Sending specific error response
-    } else {
-      res.status(500).json({ error: "Internal server error" });
-    }
+    handleServerError(res, error);
   }
 };
 
