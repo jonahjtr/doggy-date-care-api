@@ -4,6 +4,7 @@ const Dog = require("../models/dogModels");
 const registerUser = async (req, res) => {
   try {
     const result = await Auth.create(req, res);
+
     if (typeof result === "object" && result !== null) {
       res.status(200).json(result); // Sending success response
     } else if (result === "username already exists") {
@@ -32,7 +33,11 @@ const getUser = async (req, res) => {
       res.status(200).json(result);
     }
   } catch (error) {
-    res.status(500).send(error);
+    if (error.status) {
+      res.status(error.status).json({ error: error.error }); // Sending specific error response
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
@@ -47,19 +52,26 @@ const loginUser = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
+    if (error.status) {
+      res.status(error.status).json({ error: error.error }); // Sending specific error response
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
   }
 };
 
 const deleteUser = async (req, res) => {
   const data = req.payload;
-  Auth.delete(data)
-    .then(function (result) {
-      if (result.success == true) res.status(200).send("user deleted");
-      res.status(200).send("user not deleted");
-      console.log(result);
-    })
-    .catch((err) => err);
+  try {
+    const result = await Auth.delete(data);
+    if (result.success == true) res.status(200).send("user deleted");
+  } catch (error) {
+    if (error.status) {
+      res.status(error.status).json({ error: error.error }); // Sending specific error response
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
 };
 
 module.exports = {

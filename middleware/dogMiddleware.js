@@ -5,7 +5,8 @@ module.exports.verifyDogMedicine = async (req, res, next) => {
   const medId = req.params.medId;
   try {
     const medicineList = await medicine.getMedicineIdsByDogId(dogId);
-
+    if (!medicineList)
+      return res.status(404).json({ message: "no medicine found" });
     if (!medicineList.includes(parseInt(medId))) {
       return res.status(401).json({ message: "wrong medicine ID" });
     } else {

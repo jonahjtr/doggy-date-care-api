@@ -7,28 +7,40 @@ const Dog = require("../models/dogModels");
 module.exports = {
   create: async function (req, res) {
     const data = req.body;
+
+    if (
+      !data.username ||
+      !data.email ||
+      !data.password ||
+      !data.first_name ||
+      !data.last_name
+    ) {
+      const error = new Error("Missing required fields");
+      error.status = 400;
+      throw error;
+    }
     try {
       await validateUserData(data);
 
       const { username, email, password, first_name, last_name } = data;
-
       const hashedPassword = await hashPassword(password);
       const query =
         "INSERT INTO users (username, email, password, first_name, last_name) VALUES ($1, $2, $3, $4, $5) RETURNING *";
       const values = [username, email, hashedPassword, first_name, last_name];
-
       const result = await pool.query(query, values);
-      console.log("logging result inside create", result.rows[0]);
       if (result.rows[0]) {
         return result.rows[0];
       } else {
-        return "username already exists";
+        const error = new Error("error Creating User");
+        error.status = 500;
+        throw error;
       }
     } catch (error) {
       if (error.code === "23505") {
-        throw { status: 400, error: error.detail }; // Throw an error object with status and error message
+        const error = new Error(error.detail);
+        error.status = 400;
+        throw error;
       }
-      console.error("Error:", error);
       throw error;
     }
   },
@@ -36,20 +48,20 @@ module.exports = {
     try {
       const data = { email: email, password: password };
       await validateUserData(data);
-
       const user = await findUserByEmail(email);
 
-      if (user === "No user found") {
-        return { status: 404, error: "User not found" };
+      if (user.length === 0) {
+        const error = new Error("user Not found");
+        error.status = 404;
+        throw error;
       }
-
-      let hasDogs;
+      let hasDogs; // this checks if the user has any dogs
       try {
         const dogs = await Dog.getAllDogs(user.id);
         hasDogs = Array.isArray(dogs) && dogs.length > 0;
-      } catch (dogError) {
+      } catch (error) {
         console.error("Error retrieving dogs:", dogError);
-        return { status: 500, error: "Error retrieving dogs" };
+        throw error;
       }
 
       const result = await bcrypt.compare(password, user.password);
@@ -81,8 +93,6 @@ module.exports = {
           { expiresIn: "7d" }
         );
 
-        console.log("do they have dogs? ", hasDogs);
-
         return {
           status: 200,
           data: {
@@ -93,11 +103,13 @@ module.exports = {
           },
         };
       } else {
-        return { status: 401, error: "Incorrect password" };
+        const error = new Error("Incorrect Password");
+        error.status = 401;
+        throw error;
       }
     } catch (error) {
       console.error(error);
-      return { status: 500, error: "Internal Server Error" };
+      throw error;
     }
   },
 
@@ -106,7 +118,9 @@ module.exports = {
       const user = await findUserByEmail(data.email);
 
       if (!user) {
-        return { success: false, error: "User not found" };
+        const error = new Error("error finding user to delete");
+        error.status = 404;
+        throw error;
       } else {
         const query = "DELETE FROM users WHERE id = $1";
         const result = await pool.query(query, [data.id]);
@@ -114,12 +128,14 @@ module.exports = {
         if (result.rowCount > 0) {
           return { success: true };
         } else {
-          return { success: false, error: "User not deleted" };
+          const error = new Error("Error deleting user");
+          error.status = 500;
+          throw error;
         }
       }
-    } catch (err) {
+    } catch (error) {
       console.error("Error deleting user:", err);
-      return { success: false, error: "Internal Server Error" };
+      throw error;
     }
   },
   findOneByEmail: async function (email) {
@@ -133,11 +149,13 @@ module.exports = {
 
         return result.rows[0];
       } else {
-        return "No user found";
+        const error = new Error("could Not find user by email");
+        error.status = 404;
+        throw error;
       }
-    } catch (err) {
+    } catch (error) {
       console.error("Error finding user by email:", err);
-      throw err;
+      throw error;
     }
   },
   getDogOwnerId: async function (dogId) {
@@ -149,14 +167,20 @@ module.exports = {
 
       const values = [dogId];
       const result = await pool.query(query, values);
-
+      if (result.rows.length === 0) {
+        const error = new Error("Could not find dog");
+        error.status = 404;
+        throw error;
+      }
       if (result.rows.length > 0) {
         return result.rows[0].user_id;
       } else {
-        return null;
+        const error = new Error("Could Not find owner connected to dog");
+        error.status = 404;
+        throw error;
       }
     } catch (error) {
-      console.error("Error retrieving dog by ID:", error);
+      console.error("Error retrieving dogs owner id:", error);
       throw error;
     }
   },
@@ -169,14 +193,20 @@ module.exports = {
 
       const values = [photoName];
       const result = await pool.query(query, values);
-
+      if (result.rows.length === 0) {
+        const error = new Error("Could not find photo");
+        error.status = 404;
+        throw error;
+      }
       if (result.rows.length > 0) {
         return result.rows[0].user_id;
       } else {
-        return null;
+        const error = new Error("Could Not find owner connected to photo");
+        error.status = 404;
+        throw error;
       }
     } catch (error) {
-      console.error("Error retrieving photo by name:", error);
+      console.error("Error retrieving photo owner id:", error);
       throw error;
     }
   },
@@ -189,10 +219,17 @@ module.exports = {
 
       const values = [file_name];
       const result = await pool.query(query, values);
+      if (result.rows.length === 0) {
+        const error = new Error("Could not find file");
+        error.status = 404;
+        throw error;
+      }
       if (result.rows[0].user_id) {
         return result.rows[0].user_id;
       } else {
-        return null;
+        const error = new Error("Could not find file owner id");
+        error.status = 404;
+        throw error;
       }
     } catch (error) {
       console.error("Error retrieving file by name:", error);
@@ -203,16 +240,18 @@ module.exports = {
 
 async function validateUserData(data) {
   try {
-    if (!data.password || !data.email) {
-      return "email and/or password missing";
+    if (!data.email || !data.password) {
+      const error = new Error("missing email or password");
+      error.status = 400;
+      throw error;
     }
     await validatePassword(data.password, 6);
     await validateEmail(data.email);
-    return;
   } catch (err) {
     throw err;
   }
 }
+
 async function checkUsernameAvailability(username) {
   try {
     const result = await db.query("SELECT * FROM users WHERE username = $1", [
@@ -226,14 +265,16 @@ async function checkUsernameAvailability(username) {
     } else {
       return "No user found";
     }
-  } catch (err) {
-    throw err;
+  } catch (error) {
+    throw error;
   }
 }
 async function validateEmail(email) {
   try {
     if (typeof email !== "string") {
-      throw "email must be a string";
+      const error = new Error("email must be a string");
+      error.status = 400;
+      throw error;
     }
 
     const emailRegex =
@@ -242,24 +283,33 @@ async function validateEmail(email) {
     if (emailRegex.test(email)) {
       return;
     } else {
-      throw "Provided email does not match proper email format";
+      const error = new Error("email in incorrect format");
+      error.status = 400;
+      throw error;
     }
-  } catch (err) {
+  } catch (error) {
     console.error("Email validation error:", err);
+    throw error;
   }
 }
 
 async function validatePassword(password, minCharacters) {
   try {
     if (typeof password !== "string") {
-      throw "password must be a string";
+      const error = new Error("password must be a string");
+      error.status = 400;
+      throw error;
     } else if (password.length < minCharacters) {
-      throw `password must be at least ${minCharacters} characters long`;
+      const error = new Error(
+        `password must be at least ${minCharacters} characters long`
+      );
+      error.status = 400;
+      throw error;
     } else {
       return;
     }
-  } catch (err) {
-    throw err;
+  } catch (error) {
+    throw error;
   }
 }
 
@@ -267,10 +317,11 @@ async function hashPassword(password) {
   try {
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
-
     return hash;
   } catch (err) {
-    throw err;
+    const error = new Error("issue with hashing password");
+    error.status = 500;
+    throw error;
   }
 }
 async function findUserByEmail(email) {
@@ -278,16 +329,21 @@ async function findUserByEmail(email) {
     const result = await db.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
+    if (!result) {
+      const error = new Error("error with database finding user by email");
+      error.status = 500;
+      throw error;
+    }
 
     if (result.rows[0]) {
-      //returns all info on user
-
       return result.rows[0];
     } else {
-      return "No user found";
+      const error = new Error("Cannot find user by email");
+      error.status = 404;
+      throw error;
     }
-  } catch (err) {
+  } catch (error) {
     console.error("Error finding user by email:", err);
-    throw err;
+    throw error;
   }
 }
