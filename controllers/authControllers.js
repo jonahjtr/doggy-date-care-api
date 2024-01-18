@@ -15,11 +15,7 @@ const getUser = async (req, res) => {
   try {
     const userId = req.payload.id;
     const result = await User.getUserInfo(userId);
-    if (!result) {
-      res.status(404).send("no user found");
-    } else {
-      res.status(200).json(result);
-    }
+    res.status(200).json(result);
   } catch (error) {
     handleServerError(res, error);
   }

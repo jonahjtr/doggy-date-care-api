@@ -74,9 +74,20 @@ module.exports = {
     `;
       const values = [dog_id];
       const result = await pool.query(query, values);
+      if (!result) {
+        const error = new Error("Problem getting photos for dog dog");
+        error.status = 500;
+        throw error;
+      }
+      if (!result.rows) {
+        const error = new Error("No photos found for this dog");
+        error.status = 404;
+        throw error;
+      }
+      if (result.rows.length === 0) return [];
 
       const photoList = result.rows;
-      //gets all images from result of photo query by dog id
+
       for (let photo of photoList) {
         const getObjectParams = {
           Bucket: bucketName,
@@ -89,7 +100,6 @@ module.exports = {
 
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving photos for user:", error);
       throw error;
     }
   },

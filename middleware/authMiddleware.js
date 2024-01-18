@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const Photo = require("../models/photoModels");
 const Auth = require("../models/auth.models");
+const { handleServerError } = require("../utils/errorHandlers/errorHandlers");
 
 module.exports.decodeJwt = async (req, res, next) => {
   try {
@@ -32,19 +33,13 @@ module.exports.verifyDogOwner = async (req, res, next) => {
     const requesterId = req.payload.id;
     const dogId = req.params.dogId;
     const dogOwnerId = await Auth.getDogOwnerId(dogId);
-    if (!requesterId)
-      res.status(401).json({ message: "Problem finding userId" });
-    if (!dogOwnerId)
-      res.status(404).json({ message: "no owner connected to dog" });
     if (dogOwnerId !== requesterId) {
       res.status(403).json({ message: "Unauthorized access to dog" });
     } else {
       next();
     }
   } catch (error) {
-    //add error handling for if no dog by that dogId is found
-    console.error("Error verifying dog owner:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 

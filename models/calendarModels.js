@@ -7,10 +7,11 @@ module.exports = {
       const values = [dogId];
 
       const result = await pool.query(query, values);
-
+      if (!results) {
+        const error = new Error("Problem getting dates for dog.");
+      }
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving dates:", error);
       throw error;
     }
   },

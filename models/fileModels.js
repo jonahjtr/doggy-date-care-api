@@ -61,6 +61,10 @@ module.exports = {
     `;
       const values = [dog_id];
       const result = await pool.query(query, values);
+      if (!result) {
+        const error = new Error("Problem getting files for dog.");
+      }
+      if (result.rows.length < 1) return [];
 
       const fileList = result.rows;
       for (let file of fileList) {
@@ -75,7 +79,6 @@ module.exports = {
 
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving files for user:", error);
       throw error;
     }
   },
