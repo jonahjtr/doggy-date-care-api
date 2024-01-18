@@ -11,17 +11,8 @@ module.exports = {
     `;
       const values = [user_id];
       const result = await pool.query(query, values);
-      if (!result) {
-        const error = new Error("Problem finding dogs");
-        error.status = 500;
-        throw error;
-      }
-      if (!result.rows || result.rows.length === 0) {
-        const error = new Error("No dogs found for this user");
-        error.status = 404;
-        throw error;
-      }
-      return result.rows; // Return all dogs when there are multiple dogs
+
+      return result.rows;
     } catch (error) {
       throw error;
     }
@@ -81,16 +72,7 @@ GROUP BY
       const values = [dogId];
       const result = await pool.query(query, values);
 
-      if (!result) {
-        const error = new Error("Problem finding dog");
-        error.status = 500;
-        throw error;
-      }
-      if (!result.rows || result.rows.length === 0) {
-        const error = new Error("No dog found for this user");
-        error.status = 404;
-        throw error;
-      }
+      if (result.rows.length === 0) return [];
       return result.rows[0];
     } catch (error) {
       throw error;
