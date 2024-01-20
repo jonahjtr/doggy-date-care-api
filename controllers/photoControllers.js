@@ -33,7 +33,6 @@ module.exports.getPhotoByName = async (req, res) => {
 };
 module.exports.postProfilePhoto = async (req, res) => {
   const data = req.file;
-  const user_id = req.payload.id;
   const dog_id = req.params.dogId;
 
   const randomizeImageName = () => crypto.randomBytes(32).toString("hex");

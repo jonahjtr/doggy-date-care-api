@@ -88,20 +88,6 @@ module.exports = {
       throw error;
     }
   },
-  postPhoto: async function (name) {
-    try {
-      const query = `
-      SELECT * FROM photos
-      WHERE name = $1;
-    `;
-      const values = [name];
-      const result = await pool.query(query, values);
-      if (result.rows.length < 1) return null;
-      return result.rows;
-    } catch (error) {
-      throw error;
-    }
-  },
   getPhotoFromS3: async function (photo_name) {
     try {
       const getObjectParams = {
@@ -128,7 +114,7 @@ module.exports = {
       };
       const command = new PutObjectCommand(params);
       await s3.send(command);
-      return true;
+      return;
     } catch (error) {
       throw error;
     }
@@ -141,7 +127,6 @@ module.exports = {
       };
       const command = new DeleteObjectCommand(params);
       await s3.send(command);
-
       return;
     } catch (error) {
       throw error;
@@ -153,11 +138,14 @@ module.exports = {
       INSERT INTO photos (photo_name,  user_id, dog_id)
       VALUES ($1,$2,$3)
       RETURNING photo_name;
-
     `;
+
       const values = [name, user_id, dog_id];
       const result = await pool.query(query, values);
+
       if (result.rows.length < 1) {
+        const error = new Error("Not able to post to DataBase.");
+        error.status = 401;
         throw error;
       } else {
         return result.rows[0];
