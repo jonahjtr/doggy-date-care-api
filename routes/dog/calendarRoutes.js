@@ -1,9 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const authMiddleware = require("../../middleware/authMiddleware");
-const medicineControllers = require("../../controllers/medicineControllers");
-const dogMiddleware = require("../../middleware/dogMiddleware");
 const calendarControllers = require("../../controllers/calendarControllers");
+const validation = require("../../middleware/validationMiddleware");
 
 // dogs/calendar
 
@@ -17,22 +16,29 @@ router.get(
   calendarControllers.getDatesByDogId
 );
 
-//PUT - edit date
-// router.put("/:dogId", authMiddleware.decodeJwt, authMiddleware.verifyDogOwner);
+// PUT - edit date
+router.put(
+  "/:dogId",
+  authMiddleware.decodeJwt,
+  authMiddleware.verifyDogOwner,
+  calendarControllers.updateDate
+);
 
 //POST - create date
 router.post(
   "/:dogId",
   authMiddleware.decodeJwt,
   authMiddleware.verifyDogOwner,
+  validation.DateCreationValidator,
   calendarControllers.createDate
 );
 
 //DELETE - delete date
 router.delete(
-  "/:dogId/:dateId",
+  "/:dogId/:date_id",
   authMiddleware.decodeJwt,
-  authMiddleware.verifyDogOwner
+  authMiddleware.verifyDogOwner,
+  calendarControllers.deleteDate
 );
 
 module.exports = router;

@@ -41,12 +41,20 @@ module.exports.MedicineCreationValidator = async (req, res, next) => {
 
 module.exports.FileUploadValidator = async (req, res, next) => {
   const data = req.file;
+  if (!data.file_name || !data.file_nickname || !data.upload_date) {
+    res.status(400).json({ error: "missing required feilds" });
+  } else {
+    next();
+  }
+};
+
+module.exports.DateCreationValidator = async (req, res, next) => {
+  const data = req.file;
   if (
-    !data.file_name ||
-    !data.file_nickname ||
-    !data.user_id ||
-    !data.dog_id ||
-    !data.upload_date
+    !data.start_date_time ||
+    !data.location ||
+    !data.description ||
+    !data.title
   ) {
     res.status(400).json({ error: "missing required feilds" });
   } else {
