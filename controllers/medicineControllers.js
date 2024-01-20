@@ -45,10 +45,7 @@ module.exports.editMedicine = async function (req, res) {
   try {
     const updatedMedicine = await Medicine.edit(medicineId, updateData);
 
-    res.status(200).json({
-      message: "Medicine updated successfully",
-      medicine: updatedMedicine,
-    });
+    res.status(200).json(updatedMedicine);
   } catch (error) {
     handleServerError(res, error);
   }
@@ -60,10 +57,7 @@ module.exports.deleteMedicine = async (req, res) => {
   try {
     const deletedMedicine = await Medicine.deleteMedicine(medicineId);
 
-    res.status(200).json({
-      message: "Medicine deleted successfully",
-      medicine: deletedMedicine,
-    });
+    res.status(200).json(deletedMedicine);
   } catch (error) {
     handleServerError(res, error);
   }

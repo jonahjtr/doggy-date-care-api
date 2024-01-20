@@ -227,7 +227,6 @@ module.exports = {
         throw error;
       }
     } catch (error) {
-      console.error("Error retrieving file by name:", error);
       throw error;
     }
   },
