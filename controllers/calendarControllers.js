@@ -1,4 +1,5 @@
 const Calendar = require("../models/calendarModels");
+const { handleServerError } = require("../utils/errorHandlers/errorHandlers");
 
 module.exports.allDates = async function (req, res) {
   const userId = req.payload.id;
@@ -10,8 +11,7 @@ module.exports.allDates = async function (req, res) {
     }
     res.status(200).json({ dates });
   } catch (error) {
-    console.error("Error fetching dates:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 
@@ -25,8 +25,7 @@ module.exports.getDatesByDogId = async (req, res) => {
     }
     res.status(200).json({ dates });
   } catch (error) {
-    console.error("Error creating dates:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 module.exports.createDate = async function (req, res) {
@@ -42,38 +41,26 @@ module.exports.createDate = async function (req, res) {
     );
     res.status(200).json({ createdDate });
   } catch (error) {
-    console.error("Error creating medicine:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 module.exports.updateDate = async function (req, res) {
   const updateData = req.body.dateInfo;
-  const dateId = updateData.dateId;
-
+  const dateId = updateData.date_id;
   try {
-    const updateDate = await Calendar.updateDate(updateData, dateId);
-    // const updatedMedicine = await Medicine.edit(medicineId, updateData);
-    // res.status(200).json({
-    //   message: "Medicine updated successfully",
-    //   medicine: updatedMedicine,
-    // });
+    const updateDate = await Calendar.editDate(updateData, dateId);
+    res.status(200).json({ updateDate });
   } catch (error) {
-    console.error("Error updating medicine:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 
-module.exports.deleteMedicine = async (req, res) => {
-  const medicineId = req.params.medId;
-
+module.exports.deleteDate = async (req, res) => {
+  const date_id = req.params.date_id;
   try {
-    const deletedMedicine = await Medicine.deleteMedicine(medicineId);
-    // res.status(200).json({
-    //   message: "Medicine deleted successfully",
-    //   medicine: deletedMedicine,
-    // });
+    const deletedDate = await Calendar.deleteDate(date_id);
+    res.status(200).json({ deletedDate });
   } catch (error) {
-    console.error("Error deleting medicine:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };

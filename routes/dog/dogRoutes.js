@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 
 const authMiddleware = require("../../middleware/authMiddleware");
+const validation = require("../../middleware/validationMiddleware");
 const dogControllers = require("../../controllers/dogControllers");
 
 const calendarRoutes = require("./calendarRoutes");
@@ -36,7 +37,12 @@ router.put(
 );
 
 //create dog
-router.post("/", authMiddleware.decodeJwt, dogControllers.createDog);
+router.post(
+  "/",
+  authMiddleware.decodeJwt,
+  validation.DogCreationValidation,
+  dogControllers.createDog
+);
 
 //delete dog
 router.delete(

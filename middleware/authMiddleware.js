@@ -2,13 +2,13 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const Photo = require("../models/photoModels");
 const Auth = require("../models/auth.models");
+const { handleServerError } = require("../utils/errorHandlers/errorHandlers");
 
 module.exports.decodeJwt = async (req, res, next) => {
   try {
     const authHeader = req.headers["authorization"];
 
     if (!authHeader) {
-      console.log("Authorization header missing");
       return res.status(401).json({ message: "Authorization header missing" });
     }
 
@@ -21,8 +21,6 @@ module.exports.decodeJwt = async (req, res, next) => {
     req.payload = payload;
     next();
   } catch (error) {
-    //find common errors like malformed token and return for each maybe? look up best practices
-    console.error("Error decoding JWT:", error);
     return res.status(401).json({ message: "Invalid token" });
   }
 };
@@ -32,19 +30,13 @@ module.exports.verifyDogOwner = async (req, res, next) => {
     const requesterId = req.payload.id;
     const dogId = req.params.dogId;
     const dogOwnerId = await Auth.getDogOwnerId(dogId);
-    if (!requesterId)
-      res.status(401).json({ message: "Problem finding userId" });
-    if (!dogOwnerId)
-      res.status(404).json({ message: "no owner connected to dog" });
     if (dogOwnerId !== requesterId) {
       res.status(403).json({ message: "Unauthorized access to dog" });
     } else {
       next();
     }
   } catch (error) {
-    //add error handling for if no dog by that dogId is found
-    console.error("Error verifying dog owner:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 
@@ -70,8 +62,6 @@ module.exports.verifyPhotoOwner = async (req, res, next) => {
       next();
     }
   } catch (error) {
-    //add function for errors explain if photoName is not found
-    console.error("Error verifying photo owner:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -80,10 +70,6 @@ module.exports.verifyFileOwner = async (req, res, next) => {
     const requesterId = req.payload.id;
     const file_name = req.params.fileName;
     const fileOwnerId = await Auth.getFileOwnerId(file_name);
-    if (!fileOwnerId)
-      return res.status(404).json({ message: "no user linked to file" });
-    if (!requesterId)
-      return res.status(401).json({ message: "problem finding the user Id" });
     if (fileOwnerId !== requesterId) {
       res.status(403).json({
         message: "Unauthorized access to file",
@@ -92,9 +78,7 @@ module.exports.verifyFileOwner = async (req, res, next) => {
       next();
     }
   } catch (error) {
-    //error handling on if there is no file with that name
-    console.error("Error verifying file owner:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 

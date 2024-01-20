@@ -25,7 +25,6 @@ const s3 = new S3Client({
 
 module.exports = {
   getAllPhotosForUser: async function (user_id) {
-    console.log("working");
     try {
       const query = `
       SELECT * FROM photos
@@ -33,9 +32,8 @@ module.exports = {
     `;
       const values = [user_id];
       const result = await pool.query(query, values);
-      if (result.rows.length < 1) return null;
+      if (result.rows.length < 1) return [];
       const photoList = result.rows;
-      //gets all images from result of photo query by dog id
       for (let photo of photoList) {
         const getObjectParams = {
           Bucket: bucketName,
@@ -47,7 +45,6 @@ module.exports = {
       }
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving photos for user:", error);
       throw error;
     }
   },
@@ -59,10 +56,9 @@ module.exports = {
     `;
       const values = [photo_name];
       const result = await pool.query(query, values);
-      if (result.rows.length < 1) return null;
+      if (result.rows.length < 1) return [];
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving photos for user:", error);
       throw error;
     }
   },
@@ -74,9 +70,10 @@ module.exports = {
     `;
       const values = [dog_id];
       const result = await pool.query(query, values);
+      if (result.rows.length === 0) return [];
 
       const photoList = result.rows;
-      //gets all images from result of photo query by dog id
+
       for (let photo of photoList) {
         const getObjectParams = {
           Bucket: bucketName,
@@ -86,25 +83,8 @@ module.exports = {
         const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
         photo.photo_url = url;
       }
-
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving photos for user:", error);
-      throw error;
-    }
-  },
-  postPhoto: async function (name) {
-    try {
-      const query = `
-      SELECT * FROM photos
-      WHERE name = $1;
-    `;
-      const values = [name];
-      const result = await pool.query(query, values);
-      if (result.rows.length < 1) return null;
-      return result.rows;
-    } catch (error) {
-      console.error("Error retrieving photos for user:", error);
       throw error;
     }
   },
@@ -118,7 +98,6 @@ module.exports = {
       const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
       return url;
     } catch (error) {
-      console.log("error retreiving photo url");
       throw error;
     }
   },
@@ -137,7 +116,6 @@ module.exports = {
       await s3.send(command);
       return;
     } catch (error) {
-      console.error("Error uploading photo for user:", error);
       throw error;
     }
   },
@@ -149,10 +127,8 @@ module.exports = {
       };
       const command = new DeleteObjectCommand(params);
       await s3.send(command);
-
       return;
     } catch (error) {
-      console.error("Error uploading photo for user:", error);
       throw error;
     }
   },
@@ -162,23 +138,23 @@ module.exports = {
       INSERT INTO photos (photo_name,  user_id, dog_id)
       VALUES ($1,$2,$3)
       RETURNING photo_name;
-
     `;
+
       const values = [name, user_id, dog_id];
       const result = await pool.query(query, values);
+
       if (result.rows.length < 1) {
-        console.log("error uploading photo");
+        const error = new Error("Not able to post to DataBase.");
+        error.status = 401;
         throw error;
       } else {
         return result.rows[0];
       }
     } catch (error) {
-      console.error("Error uploading photo for user:", error);
       throw error;
     }
   },
   updateProfilePhotoInDB: async function (name, dogId) {
-    console.log("name", name);
     try {
       const query = `
       UPDATE dogs
@@ -190,13 +166,13 @@ module.exports = {
       const result = await pool.query(query, values);
 
       if (result.rows.length < 1) {
-        console.log("Error updating profile photo");
-        throw new Error("No rows were updated.");
+        const error = new Error("No profile Photo to update.");
+        error.status = 404;
+        throw error;
       } else {
         return result.rows[0].profile_picture;
       }
     } catch (error) {
-      console.error("Error updating profile photo:", error);
       throw error;
     }
   },
@@ -207,13 +183,13 @@ module.exports = {
       const values = [photoName];
       const result = await pool.query(query, values);
       if (result.rows.length < 1) {
-        console.log("error deleting photo in query");
+        const newError = new Error("No photo found to delete.");
+        newError.status = 404;
         throw error;
       } else {
         return result.rows[0];
       }
     } catch (error) {
-      console.error("Error deleting photo for user:", error);
       throw error;
     }
   },

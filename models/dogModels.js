@@ -12,17 +12,8 @@ module.exports = {
       const values = [user_id];
       const result = await pool.query(query, values);
 
-      if (!result.rows) {
-        throw new DatabaseError("No dogs found for this user", 404); // Custom error for "Not Found"
-      }
-
-      if (result.rows.length === 0) {
-        return false; // Return false when there are no dogs
-      }
-
-      return result.rows; // Return all dogs when there are multiple dogs
+      return result.rows;
     } catch (error) {
-      console.error("Error retrieving dogs for user:", error);
       throw error;
     }
   },
@@ -81,13 +72,9 @@ GROUP BY
       const values = [dogId];
       const result = await pool.query(query, values);
 
-      if (result.rows.length > 0) {
-        return result.rows[0];
-      } else {
-        return null; // No dog found with the specified ID
-      }
+      if (result.rows.length === 0) return [];
+      return result.rows[0];
     } catch (error) {
-      console.error("Error retrieving dog by ID:", error);
       throw error;
     }
   },
@@ -104,13 +91,18 @@ GROUP BY
       ];
       const result = await pool.query(query, values);
       if (!result) {
-        console.log("error with query");
-        return;
-      } else {
-        return result.rows[0];
+        const error = new Error("Problem creating dog");
+        error.status = 500;
+        throw error;
       }
+      if (!result.rows || result.rows.length === 0) {
+        const error = new Error("No dog found for this user");
+        error.status = 404;
+        throw error;
+      }
+      return result.rows[0];
     } catch (error) {
-      console.log("Error creating dog", error);
+      throw error;
     }
   },
   update: async function (id, updateData) {
@@ -118,7 +110,9 @@ GROUP BY
       const columnsToUpdate = Object.keys(updateData);
 
       if (columnsToUpdate.length === 0) {
-        throw new Error("No columns to update provided");
+        const error = new Error("No columns to update provided");
+        error.status = 404;
+        throw error;
       }
 
       const values = [id, ...Object.values(updateData)];
@@ -135,33 +129,39 @@ GROUP BY
     `;
 
       const result = await pool.query(query, values);
-
-      if (result.rows.length === 0) {
-        throw new Error(`Record with ID ${id} not found`);
+      if (!result) {
+        const error = new Error("Problem Updating dog");
+        error.status = 500;
+        throw error;
       }
-      console.log(result.rows[0]);
+      if (!result.rows || result.rows.length === 0) {
+        const error = new Error("No dog found for this user");
+        error.status = 404;
+        throw error;
+      }
       return result.rows[0];
     } catch (error) {
-      console.error("Error updating record:", error);
       throw error;
     }
   },
   delete: async function (dogID) {
-    //will go through two middlewares to verify token and also to verify dog owner
-    // delete dog by id, and return success: true
-
     try {
       const result = await db.query(
         "DELETE FROM dogs WHERE id = $1 RETURNING *",
         [dogID]
       );
-      if (result.rows.length === 0) {
-        throw new Error(`error with deleting dog profile`);
+      if (!result) {
+        const error = new Error("Problem Deleting dog");
+        error.status = 500;
+        throw error;
       }
-      console.log(result.rows[0]);
+      if (!result.rows || result.rows.length === 0) {
+        const error = new Error("No dog found for this user");
+        error.status = 404;
+        throw error;
+      }
       return result.rows[0];
     } catch (error) {
-      console.log(error);
       throw error;
     }
   },

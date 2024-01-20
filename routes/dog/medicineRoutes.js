@@ -3,6 +3,7 @@ const router = express.Router();
 const authMiddleware = require("../../middleware/authMiddleware");
 const medicineControllers = require("../../controllers/medicineControllers");
 const dogMiddleware = require("../../middleware/dogMiddleware");
+const validator = require("../../middleware/validationMiddleware");
 // dogs/medicine
 
 //GET
@@ -17,6 +18,7 @@ router.post(
   "/:dogId",
   authMiddleware.decodeJwt,
   authMiddleware.verifyDogOwner,
+  validator.MedicineCreationValidator,
   medicineControllers.createMedicines
 );
 
