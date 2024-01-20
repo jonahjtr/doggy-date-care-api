@@ -31,10 +31,8 @@ module.exports = {
     `;
       const values = [user_id];
       const result = await pool.query(query, values);
-      if (result.rows.length < 1) return null;
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving files for user:", error);
       throw error;
     }
   },
@@ -46,10 +44,8 @@ module.exports = {
     `;
       const values = [file_name];
       const result = await pool.query(query, values);
-      if (result.rows.length < 1) return null;
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving file for user:", error);
       throw error;
     }
   },
@@ -61,10 +57,9 @@ module.exports = {
     `;
       const values = [dog_id];
       const result = await pool.query(query, values);
-      if (!result) {
-        const error = new Error("Problem getting files for dog.");
+      if (result.rows.length < 1) {
+        return [];
       }
-      if (result.rows.length < 1) return [];
 
       const fileList = result.rows;
       for (let file of fileList) {
@@ -93,7 +88,6 @@ module.exports = {
       const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
       return url;
     } catch (error) {
-      console.log("error retreiving file url");
       throw error;
     }
   },
@@ -109,7 +103,6 @@ module.exports = {
       await s3.send(command);
       return;
     } catch (error) {
-      console.error("Error uploading file for user:", error);
       throw error;
     }
   },
@@ -121,10 +114,8 @@ module.exports = {
       };
       const command = new DeleteObjectCommand(params);
       await s3.send(command);
-
       return;
     } catch (error) {
-      console.error("Error deleting file for user:", error);
       throw error;
     }
   },
@@ -140,13 +131,13 @@ module.exports = {
       const values = [name, file_nickname, user_id, dog_id, currentDate];
       const result = await pool.query(query, values);
       if (result.rows.length < 1) {
-        console.log("error uploading file");
+        const error = new Error("Problem uploading file to DB.");
+        error.status = 500;
         throw error;
       } else {
         return result.rows[0];
       }
     } catch (error) {
-      console.error("Error uploading file for user:", error);
       throw error;
     }
   },
@@ -156,13 +147,13 @@ module.exports = {
       const values = [file_name];
       const result = await pool.query(query, values);
       if (result.rows.length < 1) {
-        console.log("error deleting file in query");
+        const error = new Error("Problem deleting file from DB.");
+        error.status = 500;
         throw error;
       } else {
         return result.rows[0];
       }
     } catch (error) {
-      console.error("Error deleting file for user:", error);
       throw error;
     }
   },

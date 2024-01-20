@@ -24,7 +24,6 @@ module.exports.DogCreationValidation = async (req, res, next) => {
 };
 module.exports.MedicineCreationValidator = async (req, res, next) => {
   const data = req.body.medicine;
-  console.log(data);
   if (
     !data.medicine_name ||
     !data.medicine_start_date ||
@@ -33,6 +32,21 @@ module.exports.MedicineCreationValidator = async (req, res, next) => {
     !data.medicine_instructions ||
     !data.medicine_frequency ||
     !data.description
+  ) {
+    res.status(400).json({ error: "missing required feilds" });
+  } else {
+    next();
+  }
+};
+
+module.exports.FileUploadValidator = async (req, res, next) => {
+  const data = req.file;
+  if (
+    !data.file_name ||
+    !data.file_nickname ||
+    !data.user_id ||
+    !data.dog_id ||
+    !data.upload_date
   ) {
     res.status(400).json({ error: "missing required feilds" });
   } else {
