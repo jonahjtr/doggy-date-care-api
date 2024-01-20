@@ -1,5 +1,5 @@
-const pool = require("../config/db");
 const Medicine = require("../models/medicineModel");
+const { handleServerError } = require("../utils/errorHandlers/errorHandlers");
 
 module.exports.getMedicines = async function (req, res) {
   const dogId = req.params.dogId;
@@ -7,8 +7,7 @@ module.exports.getMedicines = async function (req, res) {
     const medicines = await Medicine.getMedicines(dogId);
     res.status(200).json({ medicines });
   } catch (error) {
-    console.error("Error fetching medicines:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 module.exports.getMedicinesByUserId = async function (req, res) {
@@ -19,8 +18,7 @@ module.exports.getMedicinesByUserId = async function (req, res) {
 
     res.status(200).json({ medicines });
   } catch (error) {
-    console.error("Error fetching medicines:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 
@@ -36,8 +34,7 @@ module.exports.createMedicines = async (req, res) => {
       medicines: createdMedicines,
     });
   } catch (error) {
-    console.error("Error creating medicines:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 
@@ -53,8 +50,7 @@ module.exports.editMedicine = async function (req, res) {
       medicine: updatedMedicine,
     });
   } catch (error) {
-    console.error("Error updating medicine:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    handleServerError(res, error);
   }
 };
 
@@ -69,11 +65,6 @@ module.exports.deleteMedicine = async (req, res) => {
       medicine: deletedMedicine,
     });
   } catch (error) {
-    console.error("Error deleting medicine:", error);
-    if (error.message.includes("not found")) {
-      res.status(404).json({ error: "Medicine not found" });
-    } else {
-      res.status(500).json({ error: "Internal Server Error" });
-    }
+    handleServerError(res, error);
   }
 };

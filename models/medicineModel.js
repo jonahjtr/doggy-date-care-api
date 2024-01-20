@@ -1,13 +1,4 @@
 const pool = require("../config/db");
-const VALID_COLUMNS = [
-  "name",
-  "dosage",
-  "frequency",
-  "start_date",
-  "end_date",
-  "instructions",
-  "description",
-];
 
 module.exports = {
   getMedicines: async function (dogId) {
@@ -18,7 +9,6 @@ module.exports = {
       const result = await pool.query(query, values);
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving medicines:", error);
       throw error;
     }
   },
@@ -30,7 +20,6 @@ module.exports = {
       const result = await pool.query(query, values);
       return result.rows;
     } catch (error) {
-      console.error("Error retrieving medicines:", error);
       throw error;
     }
   },
@@ -66,23 +55,19 @@ module.exports = {
       const result = await pool.query(query, values);
 
       if (result.rows.length > 0) {
-        return result.rows[0]; // Assuming you want to return the created medicine
+        return result.rows[0];
       } else {
-        throw new Error("Medicine creation failed");
+        const error = new Error("Medicine not created");
+        error.status = 404;
+        throw error;
       }
     } catch (error) {
-      console.error("Error creating medicine:", error);
       throw error;
     }
   },
 
   edit: async function (medicineId, updateData) {
-    console.log("Keys in updateData:", Object.keys(updateData));
-
     try {
-      console.log("update data", updateData);
-
-      // Define your list of valid columns to update
       const VALID_COLUMNS = [
         "name",
         "dosage",
@@ -97,10 +82,10 @@ module.exports = {
         VALID_COLUMNS.includes(key)
       );
 
-      console.log(updates);
-
       if (updates.length === 0) {
-        throw new Error("No valid columns to update provided");
+        const error = new Error("No valid columns to update provided");
+        error.status = 404;
+        throw error;
       }
 
       // Build query
@@ -120,12 +105,12 @@ module.exports = {
       const result = await pool.query(query, values);
 
       if (result.rows.length === 0) {
-        throw new Error(`Medicine with ID ${medicineId} not found`);
+        const error = new Error(`Medicine with ID ${medicineId} not found`);
+        error.status = 404;
+        throw error;
       }
-
       return result.rows[0];
     } catch (error) {
-      console.error("Error updating medicine:", error);
       throw error;
     }
   },
@@ -136,9 +121,9 @@ module.exports = {
       const values = [dogId];
 
       const result = await pool.query(query, values);
+      if (result.rows.length === 0) return [];
       return result.rows.map((row) => row.id);
     } catch (error) {
-      console.error("Error retrieving medicine IDs:", error);
       throw error;
     }
   },
@@ -150,12 +135,12 @@ module.exports = {
       const result = await pool.query(query, values);
 
       if (result.rows.length === 0) {
-        throw new Error(`Medicine with ID ${medicineId} not found`);
+        const error = new Error(`Medicine with ID ${medicineId} not found`);
+        error.status = 404;
+        throw error;
       }
-
       return result.rows[0];
     } catch (error) {
-      console.error("Error deleting medicine:", error);
       throw error;
     }
   },
