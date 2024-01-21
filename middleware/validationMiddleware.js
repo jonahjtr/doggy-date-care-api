@@ -41,11 +41,19 @@ module.exports.MedicineCreationValidator = async (req, res, next) => {
 
 module.exports.FileUploadValidator = async (req, res, next) => {
   const data = req.file;
-  if (!data.file_name || !data.file_nickname || !data.upload_date) {
-    res.status(400).json({ error: "missing required feilds" });
-  } else {
-    next();
+  const allowedMimeTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
+
+  if (!allowedMimeTypes.includes(data.mimetype)) {
+    return res.status(400).json({ error: "Incorrect file type" });
   }
+  if (!data.originalname) {
+    res.status(400).json({ error: "missing required feilds" });
+  }
+  next();
 };
 
 module.exports.DateCreationValidator = async (req, res, next) => {
@@ -56,8 +64,37 @@ module.exports.DateCreationValidator = async (req, res, next) => {
     !data.description ||
     !data.title
   ) {
-    res.status(400).json({ error: "missing required feilds" });
+    res.status(400).json("missing required feilds");
   } else {
     next();
   }
+};
+module.exports.ValidatePhoto = async (req, res, next) => {
+  const data = req.file;
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/svg+xml",
+    "image/webp",
+    "image/x-icon",
+    "image/jp2",
+  ];
+
+  if (!allowedMimeTypes.includes(data.mimetype)) {
+    res.status(401).json("incorrect file type ");
+  } else {
+    next();
+  }
+};
+module.exports.ValidatePhoto = async (req, res, next) => {
+  const data = req.file;
+  const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"]; // Add more as needed
+
+  if (!allowedMimeTypes.includes(data.mimetype)) {
+    console.log("Invalid MIME type:", data.mimetype);
+    return res.status(400).json({ error: "Incorrect file type" });
+  }
+
+  next();
 };

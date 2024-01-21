@@ -9,22 +9,17 @@ const getUser = async (req, res) => {
     const result = await User.getUserInfo(id);
 
     if (result.dogs && result.dogs.length > 0) {
-      const profileUrlsPromises = [];
-
       for (const dog of result.dogs) {
         if (dog.dog_profile_picture) {
-          profileUrlsPromises.push(async () => {
-            try {
-              const url = await Photo.getPhotoFromS3(dog.dog_profile_picture);
-              dog.dog_profile_url = url;
-            } catch (error) {
-              handleServerError(res, error);
-            }
-          });
+          try {
+            const url = await Photo.getPhotoFromS3(dog.dog_profile_picture);
+            dog.dog_profile_url = url;
+            console.log(url);
+          } catch (error) {
+            handleServerError(res, error);
+          }
         }
       }
-
-      await Promise.all(profileUrlsPromises);
     }
 
     res.status(200).json(result);

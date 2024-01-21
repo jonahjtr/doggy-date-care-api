@@ -7,6 +7,7 @@ const upload = multer({ storage: storage });
 
 const authMiddleware = require("../../middleware/authMiddleware");
 const photoControllers = require("../../controllers/photoControllers");
+const validationMiddleware = require("../../middleware/validationMiddleware");
 
 //GET
 router.get(
@@ -26,6 +27,7 @@ router.post(
   "/:dogId",
   authMiddleware.decodeJwt,
   upload.single("file"),
+  validationMiddleware.ValidatePhoto,
   photoControllers.postPhoto
 );
 router.post(
