@@ -2,7 +2,7 @@ const db = require("../config/db");
 const pool = require("../config/db");
 const sharp = require("sharp");
 
-const { GetSignedUrl, getSignedUrl } = require("@aws-sdk/s3-request-presigner");
+const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 const {
   S3Client,
   PutObjectCommand,
@@ -102,6 +102,12 @@ module.exports = {
     }
   },
   postPhotoToS3: async function (photoName, data) {
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedMimeTypes.includes(data.mimetype)) {
+      const error = new Error("Invalid image format");
+      error.status = 401;
+      throw error;
+    }
     const buffer = await sharp(data.buffer)
       .resize({ height: 600, width: 600, fit: "contain" })
       .toBuffer();

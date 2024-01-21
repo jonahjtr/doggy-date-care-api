@@ -56,7 +56,18 @@ module.exports.DateCreationValidator = async (req, res, next) => {
     !data.description ||
     !data.title
   ) {
-    res.status(400).json({ error: "missing required feilds" });
+    res.status(400).json("missing required feilds");
+  } else {
+    next();
+  }
+};
+module.exports.ValidatePhoto = async (req, res, next) => {
+  const data = req.file;
+  const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"]; // Add more as needed
+
+  if (!allowedMimeTypes.includes(data.mimetype)) {
+    console.log(data.mimetype);
+    res.status(401).json("incorrect file type ");
   } else {
     next();
   }
