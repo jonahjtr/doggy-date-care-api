@@ -21,7 +21,8 @@ module.exports.decodeJwt = async (req, res, next) => {
     req.payload = payload;
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
+    console.error(error);
+    return res.status(401).json({ message: "error verifying token" });
   }
 };
 
