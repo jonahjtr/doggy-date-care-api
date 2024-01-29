@@ -2,6 +2,11 @@ const Dog = require("../models/dogModels");
 const Photo = require("../models/photoModels");
 const File = require("../models/fileModels");
 const Cal = require("../models/calendarModels");
+const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+const mime = require("mime-types");
+
 const { handleServerError } = require("../utils/errorHandlers/errorHandlers");
 
 module.exports.getAllDogs = async (req, res) => {
@@ -49,13 +54,42 @@ module.exports.getDog = async function (req, res) {
     handleServerError(res, error);
   }
 };
+
 module.exports.createDog = async function (req, res) {
   const user_id = req.payload.id;
   const dogInfo = req.body;
 
+  const randomizeImageName = () => crypto.randomBytes(32).toString("hex");
+  const photoName = randomizeImageName();
+
   try {
-    const result = await Dog.create(user_id, dogInfo);
-    res.status(200).json(result);
+    const filePath = path.join(__dirname, "../utils/dogSilhouette.jpg");
+
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath);
+
+      // Determine the mimetype based on the file extension
+      const mimetype = mime.lookup(filePath);
+
+      if (!mimetype) {
+        console.error(`Invalid mimetype for file: ${filePath}`);
+        return res.status(400).json({ error: "Invalid file format" });
+      }
+
+      // Upload the file to S3 with the determined mimetype
+      const s3UploadResult = await Photo.postPhotoToS3(
+        photoName + "silhouette",
+        { buffer: data, mimetype } // Pass data with mimetype
+      );
+
+      dogInfo.dog_profile_picture = photoName + "silhouette";
+      const result = await Dog.create(user_id, dogInfo);
+      res.status(200).json(result);
+    } else {
+      // Handle the case when the file does not exist
+      console.error(`File does not exist at: ${filePath}`);
+      res.status(404).json({ error: "Image file not found" });
+    }
   } catch (error) {
     handleServerError(res, error);
   }
