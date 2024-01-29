@@ -1,6 +1,6 @@
 const db = require("../config/db");
 const pool = require("../config/db");
-const { DatabaseError } = require("../utils/errorHandlers/DataBaseErrors");
+const Photo = require("../models/photoModels");
 
 module.exports = {
   getAllDogs: async function (user_id) {
@@ -80,14 +80,21 @@ GROUP BY
   },
 
   create: async function (ownerId, data) {
+    //change this to only happen when there is no profile photo
+    // if (!data.profile_photo) {
+    //   //make a random pic for photo here
+    // }
+
     try {
-      const query = `INSERT INTO dogs (user_id, name, date_of_birth,sex, breed) VALUES ($1, $2, $3, $4, $5) returning *`;
+      //add photo name into db
+      const query = `INSERT INTO dogs (user_id, name, date_of_birth,sex, breed, profile_picture) VALUES ($1, $2, $3, $4, $5, $6) returning *`;
       const values = [
         ownerId,
         data.name,
         data.date_of_birth,
         data.sex,
         data.breed,
+        data.dog_profile_picture,
       ];
       const result = await pool.query(query, values);
       if (!result) {

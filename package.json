@@ -25,6 +25,7 @@
     "faker": "^6.6.6",
     "file-type": "^19.0.0",
     "jsonwebtoken": "^9.0.2",
+    "mime-types": "^2.1.35",
     "moment": "^2.29.4",
     "momentjs": "^2.0.0",
     "multer": "^1.4.5-lts.1",

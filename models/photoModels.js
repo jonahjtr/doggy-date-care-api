@@ -102,9 +102,14 @@ module.exports = {
     }
   },
   postPhotoToS3: async function (photoName, data) {
-    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedMimeTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/jpg",
+    ];
     if (!allowedMimeTypes.includes(data.mimetype)) {
-      const error = new Error("Invalid image format");
+      const error = new Error(`Invalid image format ${data.mimetype}`);
       error.status = 401;
       throw error;
     }

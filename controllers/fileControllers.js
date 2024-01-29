@@ -58,11 +58,12 @@ module.exports.deleteFile = async (req, res) => {
   const file_name = req.params.fileName;
   try {
     const result = await File.getSpecificFile(file_name);
-    if (result.length < 0) {
+    if (result[0].length < 0) {
       await File.deleteFileFromS3(file_name);
       const dbDelete = await File.deleteFileFromDB(file_name);
       res.status(200).send(dbDelete);
     } else {
+      console.log("file not found here is result:", result[0]);
       res.status(404).send("No file found for the file name");
     }
   } catch (error) {
