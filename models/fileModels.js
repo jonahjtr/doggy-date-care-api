@@ -106,19 +106,7 @@ module.exports = {
       throw error;
     }
   },
-  deleteFileFromS3: async function (file_name) {
-    try {
-      const params = {
-        Bucket: bucketName,
-        Key: file_name,
-      };
-      const command = new DeleteObjectCommand(params);
-      await s3.send(command);
-      return;
-    } catch (error) {
-      throw error;
-    }
-  },
+
   postFileToDB: async function (name, file_nickname, user_id, dog_id) {
     const currentDate = moment().format("MMM Do YY");
 
@@ -141,20 +129,42 @@ module.exports = {
       throw error;
     }
   },
-  deleteFileFromDB: async function (file_name) {
+  deleteFile: async function (file_name) {
     try {
-      const query = "DELETE FROM files WHERE file_name = $1 RETURNING *;";
-      const values = [file_name];
-      const result = await pool.query(query, values);
-      if (result.rows.length < 1) {
-        const error = new Error("Problem deleting file from DB.");
-        error.status = 500;
-        throw error;
-      } else {
-        return result.rows[0];
-      }
+      const deletedFileName = await deleteFileFromDB(file_name);
+      const deletedFileFroms3 = await deleteFileFromS3(file_name);
+      return deletedFileName;
     } catch (error) {
       throw error;
     }
   },
+};
+const deleteFileFromDB = async function (file_name) {
+  try {
+    const query = "DELETE FROM files WHERE file_name = $1 RETURNING *;";
+    const values = [file_name];
+    const result = await pool.query(query, values);
+    if (result.rows.length < 1) {
+      const error = new Error("Problem deleting file from DB.");
+      error.status = 500;
+      throw error;
+    } else {
+      return result.rows[0];
+    }
+  } catch (error) {
+    throw error;
+  }
+};
+const deleteFileFromS3 = async function (file_name) {
+  try {
+    const params = {
+      Bucket: bucketName,
+      Key: file_name,
+    };
+    const command = new DeleteObjectCommand(params);
+    await s3.send(command);
+    return;
+  } catch (error) {
+    throw error;
+  }
 };
