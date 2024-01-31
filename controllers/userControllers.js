@@ -14,7 +14,6 @@ const getUser = async (req, res) => {
           try {
             const url = await Photo.getPhotoFromS3(dog.dog_profile_picture);
             dog.dog_profile_url = url;
-            console.log(url);
           } catch (error) {
             handleServerError(res, error);
           }

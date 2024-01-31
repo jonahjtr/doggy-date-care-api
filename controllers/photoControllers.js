@@ -72,9 +72,10 @@ module.exports.deletePhoto = async (req, res) => {
       error.status = 404;
       throw error;
     }
-    await Photo.deletePhotoFromS3(photoName);
-    const dbDelete = await Photo.deletePhotoFromDB(photoName);
-    res.status(200).send(dbDelete);
+
+    const deletedPhotoinfo = await Photo.deletePhoto(photoName);
+
+    res.status(200).send(deletedPhotoinfo);
   } catch (error) {
     handleServerError(req, error);
   }

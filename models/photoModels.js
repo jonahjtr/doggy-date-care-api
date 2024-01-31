@@ -130,19 +130,7 @@ module.exports = {
       throw error;
     }
   },
-  deletePhotoFromS3: async function (photoName) {
-    try {
-      const params = {
-        Bucket: bucketName,
-        Key: photoName,
-      };
-      const command = new DeleteObjectCommand(params);
-      await s3.send(command);
-      return;
-    } catch (error) {
-      throw error;
-    }
-  },
+
   postPhotoToDB: async function (name, user_id, dog_id) {
     try {
       const query = `
@@ -187,21 +175,43 @@ module.exports = {
       throw error;
     }
   },
-
-  deletePhotoFromDB: async function (photoName) {
+  deletePhoto: async function (photoName) {
     try {
-      const query = "DELETE FROM photos WHERE photo_name = $1 RETURNING *;";
-      const values = [photoName];
-      const result = await pool.query(query, values);
-      if (result.rows.length < 1) {
-        const newError = new Error("No photo found to delete.");
-        newError.status = 404;
-        throw error;
-      } else {
-        return result.rows[0];
-      }
+      const DBDelete = await deletePhotoFromDB(photoName);
+      const deletefromS3 = await deletePhotoFromS3(photoName);
+      return DBDelete;
     } catch (error) {
       throw error;
     }
   },
+};
+
+const deletePhotoFromDB = async function (photoName) {
+  try {
+    const query = "DELETE FROM photos WHERE photo_name = $1 RETURNING *;";
+    const values = [photoName];
+    const result = await pool.query(query, values);
+    if (result.rows.length < 1) {
+      const newError = new Error("No photo found to delete.");
+      newError.status = 404;
+      throw error;
+    } else {
+      return result.rows[0];
+    }
+  } catch (error) {
+    throw error;
+  }
+};
+const deletePhotoFromS3 = async function (photoName) {
+  try {
+    const params = {
+      Bucket: bucketName,
+      Key: photoName,
+    };
+    const command = new DeleteObjectCommand(params);
+    await s3.send(command);
+    return;
+  } catch (error) {
+    throw error;
+  }
 };
