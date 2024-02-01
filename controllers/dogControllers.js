@@ -1,5 +1,6 @@
 const Dog = require("../models/dogModels");
 const Photo = require("../models/photoModels");
+const Meds = require("../models/medicineModel");
 const File = require("../models/fileModels");
 const Cal = require("../models/calendarModels");
 const crypto = require("crypto");
@@ -104,15 +105,17 @@ module.exports.UpdateDog = async function (req, res) {
 };
 module.exports.deleteDog = async function (req, res) {
   const user_id = req.payload.id;
+  const dogId = req.params.dogId;
   try {
-    //to delete you need to first delete
     //dog photos
-    //dog dates
     //dog files
 
+    //dog dates
+    const deletedDates = await Cal.deleteAllDates(dogId);
     //dog medicines delete
+    const deletedMeds = await Meds.deleteAllMedicines(dogId);
 
-    const results = await Dog.delete(req.params.dogId, user_id);
+    const results = await Dog.delete(dogId, user_id);
     res.status(200).json(results);
   } catch (error) {
     handleServerError(res, error);
