@@ -20,8 +20,8 @@ password: testUser2
 username: testUser3
 email: testUser3@gmail.com
 password: testUser3
-
-      [ Authentication ]
+dd
+[ Authentication ]
 
 +-------------------------+
 | POST /auth/login |
