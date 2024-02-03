@@ -113,10 +113,10 @@ WHERE Dates.user_id = $1;`;
   deleteAllDates: async function (dog_id) {
     try {
       const query = "DELETE FROM dates WHERE dog_id = $1 RETURNING *";
-      const values = [date_id];
+      const values = [dog_id];
       const result = await pool.query(query, values);
       if (result.rows.length === 0) {
-        const error = new Error(`dog dates for  ${date_id} not found`);
+        const error = new Error(`dog dates for  ${dog_id} not found`);
         error.status = 404;
         throw error;
       }

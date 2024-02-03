@@ -107,12 +107,9 @@ module.exports.deleteDog = async function (req, res) {
   const user_id = req.payload.id;
   const dogId = req.params.dogId;
   try {
-    //dog photos
-    //dog files
-
-    //dog dates
+    const deletedPhotoNames = await Photo.deleteAllPhotos(dogId);
+    const deletedFileNames = await File.deleteAllFiles(dogId);
     const deletedDates = await Cal.deleteAllDates(dogId);
-    //dog medicines delete
     const deletedMeds = await Meds.deleteAllMedicines(dogId);
 
     const results = await Dog.delete(dogId, user_id);

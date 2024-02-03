@@ -184,6 +184,20 @@ module.exports = {
       throw error;
     }
   },
+  deleteAllPhotos: async function (dog_id) {
+    try {
+      const deletedPhotoNames = await deleteAllPhotosFromDB(dog_id);
+      if (deletedPhotoNames.length == 0) {
+        return [];
+      }
+      const deletedphotosFromS3 = await deleteAllPhotosFromS3(
+        deletedPhotoNames
+      );
+      return deletedPhotoNames;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 const deletePhotoFromDB = async function (photoName) {
@@ -198,6 +212,32 @@ const deletePhotoFromDB = async function (photoName) {
     } else {
       return result.rows[0];
     }
+  } catch (error) {
+    throw error;
+  }
+};
+const deleteAllPhotosFromDB = async function (dog_id) {
+  try {
+    const query = "DELETE FROM photos WHERE dog_id = $1 RETURNING *;";
+    const values = [dog_id];
+    const result = await pool.query(query, values);
+    const photoNames = result.rows.map((photo) => photo.photo_name);
+    return photoNames;
+  } catch (error) {
+    throw error;
+  }
+};
+const deleteAllPhotosFromS3 = async function (photo_list) {
+  try {
+    for (let photoName of photo_list) {
+      const params = {
+        Bucket: bucketName,
+        Key: photoName,
+      };
+      const command = new DeleteObjectCommand(params);
+      await s3.send(command);
+    }
+    return;
   } catch (error) {
     throw error;
   }
