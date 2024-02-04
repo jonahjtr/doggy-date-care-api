@@ -148,14 +148,7 @@ module.exports = {
     try {
       const query = "DELETE FROM medicines WHERE dog_id = $1 RETURNING *;";
       const values = [dogId];
-
       const result = await pool.query(query, values);
-
-      if (result.rows.length === 0) {
-        const error = new Error(`Medicines for  ${dogId} not found`);
-        error.status = 404;
-        throw error;
-      }
       return result.rows[0];
     } catch (error) {
       throw error;
