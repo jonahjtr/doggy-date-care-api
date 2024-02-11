@@ -30,6 +30,7 @@ router.post(
   validationMiddleware.ValidatePhoto,
   photoControllers.postPhoto
 );
+//post profile photo
 router.post(
   "/profile/:dogId",
   authMiddleware.decodeJwt,

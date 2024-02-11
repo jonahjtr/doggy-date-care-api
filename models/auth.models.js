@@ -6,7 +6,6 @@ const Dog = require("../models/dogModels");
 
 module.exports = {
   create: async function (data) {
-    console.log("data inside create function", data);
     try {
       await validateUserData(data);
 

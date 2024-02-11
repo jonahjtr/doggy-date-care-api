@@ -23,7 +23,7 @@ module.exports.DogCreationValidation = async (req, res, next) => {
   }
 };
 module.exports.MedicineCreationValidator = async (req, res, next) => {
-  const data = req.body.medicine;
+  const data = req.body.data;
   if (
     !data.medicine_name ||
     !data.medicine_start_date ||
