@@ -10,6 +10,7 @@ const calendarRoutes = require("./calendarRoutes");
 const medicineRoutes = require("./medicineRoutes");
 const photoRoutes = require("./photoRoutes");
 const fileRoutes = require("./fileRoutes");
+
 router.use("/medicine", medicineRoutes);
 router.use("/photos", photoRoutes);
 router.use("/files", fileRoutes);

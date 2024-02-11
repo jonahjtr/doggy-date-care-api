@@ -24,8 +24,8 @@ module.exports.getMedicinesByUserId = async function (req, res) {
 
 module.exports.createMedicines = async (req, res) => {
   const dogId = req.params.dogId;
-  const medicinesData = req.body.medicine;
-
+  const medicinesData = req.body.data;
+  console.log("medicinesData", medicinesData);
   try {
     const createdMedicines = await Medicine.create(medicinesData, dogId);
 
