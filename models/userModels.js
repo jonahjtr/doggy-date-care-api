@@ -55,8 +55,9 @@ WHERE users.id = $1;
         [userId]
       );
       if (!result) {
-        const error = new Error("Problem with database finding user by email");
+        const error = new Error("Problem with database finding user by id");
         error.status = 500;
+        throw error;
       }
       if (result.rows.length === 0) {
         const error = new Error("No User Found by that ID");

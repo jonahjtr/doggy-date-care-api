@@ -45,9 +45,7 @@ module.exports = {
       const user = await findUserByEmail(email);
 
       if (user.length === 0) {
-        const error = new Error("User Not found");
-        error.status = 404;
-        throw error;
+        return [];
       }
       let hasDogs; // this checks if the user has any dogs
       try {
@@ -323,20 +321,15 @@ async function findUserByEmail(email) {
       email,
     ]);
     if (!result) {
-      const error = new Error("error with database finding user by email");
-      error.status = 500;
-      throw error;
     }
 
     if (result.rows[0]) {
       return result.rows[0];
     } else {
-      const error = new Error("Cannot find user by email");
-      error.status = 404;
-      throw error;
+      return [];
     }
   } catch (error) {
-    console.error("Error finding user by email:", err);
+    console.error("Error finding user by email:", error);
     throw error;
   }
 }
