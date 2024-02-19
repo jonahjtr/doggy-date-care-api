@@ -24,6 +24,7 @@ const getUser = async (req, res) => {
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
+    console.log("email and password", email, password);
     const verificationResult = await Auth.verifyUser(email, password);
     if (verificationResult.length === 0) {
       res.status(401).json({ error: "invalid credentials" });
