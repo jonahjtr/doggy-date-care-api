@@ -25,25 +25,13 @@ SELECT
   dogs.id AS dog_id,
   dogs.name AS dog_name,
   dogs.date_of_birth AS dog_date_of_birth,
-  dogs.age AS dog_age,
   dogs.sex AS dog_sex,
   dogs.profile_picture AS dog_profile_picture,
   json_build_object(
     'breed_id', breed.breed_id,
     'breed_name', breed.breed_name,
     'size', breed.size,
-    'characteristics', breed.characteristics,
-    'temperament', breed.temperament,
-    'exercise_needs', breed.exercise_needs,
-    'health_issues_and_lifespan', breed.health_issues_and_lifespan,
-    'grooming_needs', breed.grooming_needs,
-    'training_info', breed.training_info,
-    'diet_and_nutrition', breed.diet_and_nutrition,
-    'history', breed.history,
-    'lifestyle_compatibility', breed.lifestyle_compatibility,
-    'rescue_and_adoption_resources', breed.rescue_and_adoption_resources,
-    'average_height', breed.average_height,
-    'average_weight', breed.average_weight
+    'characteristics', breed.characteristics
   ) AS breed_info,
   json_agg(
     json_build_object(
@@ -66,7 +54,7 @@ LEFT JOIN
 WHERE
   dogs.id = $1 
 GROUP BY
-  dogs.id, dog_name, dog_date_of_birth, dog_age, dog_sex, dog_profile_picture, breed.breed_id;
+  dogs.id, dog_name, dog_date_of_birth, dog_sex, dog_profile_picture, breed.breed_id;
     `;
 
       const values = [dogId];

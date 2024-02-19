@@ -317,6 +317,7 @@ async function hashPassword(password) {
 }
 async function findUserByEmail(email) {
   try {
+    console.log("findUserByEmail", email);
     const result = await db.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
