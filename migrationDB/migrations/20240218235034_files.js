@@ -19,7 +19,8 @@ exports.up = function (knex) {
       .inTable("users");
     table.string("file_name").notNullable();
     table.string("file_nickname").notNullable();
-    table.timestamps("upload_date");
+    table.string("upload_date");
+    table.timestamps("upload_dates");
   });
 };
 
