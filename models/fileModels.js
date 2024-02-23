@@ -57,7 +57,7 @@ module.exports = {
     `;
       const values = [dog_id];
       const result = await pool.query(query, values);
-      if (result.rows.length < 1) {
+      if (result.rows.length < 0) {
         return [];
       }
 
@@ -71,7 +71,6 @@ module.exports = {
         const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
         file.file_url = url;
       }
-
       return result.rows;
     } catch (error) {
       throw error;
