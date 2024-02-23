@@ -16,6 +16,7 @@ module.exports.getFilesByDogId = async (req, res) => {
   try {
     const dog_id = req.params.dogId;
     const results = await File.getAllFilesFordog(dog_id);
+    console.log(results);
     res.status(200).send(results);
   } catch (error) {
     handleServerError(res, error);

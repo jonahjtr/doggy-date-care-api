@@ -47,9 +47,9 @@ module.exports.getDog = async function (req, res) {
       result.dog_profile_picture = profile_photo;
     }
 
-    if (photos.length > 1) result.dog_photos = photos;
-    if (files.length > 1) result.dog_files = files;
-    if (dates.length > 1) result.date_events = dates;
+    if (photos.length > 0) result.dog_photos = photos;
+    if (files.length > 0) result.dog_files = files;
+    if (dates.length > 0) result.date_events = dates;
     res.status(200).json(result);
   } catch (error) {
     handleServerError(res, error);
