@@ -1,26 +1,13 @@
-## users
+# To get started
 
-3 test users
-5 dogs for each user
+1. clone repo
+2. npm I
+3. knex migrate:latest
+4. knex seed:run
+5. login !
+   email: user1@example.com
+   password: password1
 
-# test user1
-
-username: testUser1
-email: testUser1@gmail.com
-password: testUser1
-
-# test user2
-
-username: testUser2
-email: testUser2@gmail.com
-password: testUser2
-
-# test User3
-
-username: testUser3
-email: testUser3@gmail.com
-password: testUser3
-dd
 [ Authentication ]
 
 +-------------------------+
