@@ -22,7 +22,7 @@ exports.seed = async function (knex) {
       created_at: new Date(),
       updated_at: new Date(),
     },
-    // User 2
+
     {
       username: "user2",
       first_name: "Jane",
