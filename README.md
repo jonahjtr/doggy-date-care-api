@@ -1,3 +1,5 @@
+# Doggy Date Care API
+
 ## users
 
 3 test users
@@ -7,49 +9,84 @@
 
 username: testUser1
 email: testUser1@gmail.com
-password: testUser1
 
 # test user2
 
 username: testUser2
 email: testUser2@gmail.com
-password: testUser2
 
-# test User3
+# test user3
 
 username: testUser3
 email: testUser3@gmail.com
-password: testUser3
-dd
-[ Authentication ]
 
-+-------------------------+
-| POST /auth/login |
-| POST /auth/register |
-| DELETE /auth/delete |
-| DELETE /auth/logout |
-+-------------------------+
+# Routes
 
-        [ User ]
+| [ Auth ]            |
++---------------------+
+| GET /auth/me        |
+| GET /auth/google    |
+| GET /auth/logout    |
++---------------------+
 
-+-------------------------+
-| GET /user/profile |
-+-------------------------+
+| [ User ]            |
++---------------------+
+| GET /user           |
+| GET /user/:id       |
+| PUT /user/:id       |
+| DELETE /user/:id    |
++---------------------+
 
-       [ Dog ]
+| [ Dogs ]            |
++---------------------+
+| GET /dogs           |
+| GET /dogs/:id       |
+| POST /dogs          |
+| PUT /dogs/:id       |
+| DELETE /dogs/:id    |
++---------------------+
 
-+-------------------------+
-| GET /dogs |
-| GET /dogs/:id |
-| PUT /dogs/:id |
-| POST /dogs |
-| DELETE /dogs/:id |
-+-------------------------+
-|
-| [ Medicine ]
+| [ Calendar ]        |
++---------------------+
+| GET /dogs/:id/calendar |
+| POST /dogs/:id/calendar |
+| PUT /dogs/:id/calendar/:id |
+| DELETE /dogs/:id/calendar/:id |
++---------------------+
+
+| [ Files ]           |
++---------------------+
+| GET /dogs/:id/files |
+| POST /dogs/:id/files |
+| DELETE /dogs/:id/files/:id |
++---------------------+
+
+| [ Medicine ]        |
 +---------------------+
 | GET /dogs/:id/medicine |
 | POST /dogs/:id/medicine |
 | PUT /dogs/:id/medicine/:id |
 | DELETE /dogs/:id/medicine/:id |
 +---------------------+
+
+| [ Photos ]          |
++---------------------+
+| GET /dogs/:id/photos |
+| POST /dogs/:id/photos |
+| DELETE /dogs/:id/photos/:id |
++---------------------+
+
+---
+
+## Auth Rewrite (JWT)
+
+Additional JWT-based auth routes added via auth-rewrite:
+
+| [ JWT Auth ]        |
++---------------------+
+| POST /jwt/auth      |
+| GET /jwt/users      |
++---------------------+
+
+## License
+MIT
